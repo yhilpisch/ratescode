@@ -1,0 +1,31 @@
+{
+  "dataset_name": "Derived U.S. Treasury curve ML feature panel",
+  "local_filename": "ch25_us_treasury_curve_ml_panel_official.csv",
+  "source_institution": "U.S. Department of the Treasury",
+  "source_urls": [
+    "https://home.treasury.gov/treasury-daily-interest-rate-xml-feed",
+    "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=2024"
+  ],
+  "attribution": "Source: U.S. Department of the Treasury. Retrieved from official public endpoints.",
+  "retrieval_date_utc": "2026-05-26T06:51:27+00:00",
+  "snapshot_date_range": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "license_note": "Treasury data is U.S. federal government information. Keep source attribution when reusing the snapshot.",
+  "transformation_summary": "Derived a compact 2024 feature panel from the official Treasury curve for baseline rates-ML experiments.",
+  "chapter_usage": [
+    "ch24",
+    "ch25",
+    "ch27"
+  ],
+  "schema": {
+    "date": "Business date",
+    "level_bp": "Average of 2Y, 5Y, and 10Y nominal yields, basis points",
+    "slope_10y_2y_bp": "10Y minus 2Y slope, basis points",
+    "curvature_5y_bp": "2x5Y - 2Y - 10Y, basis points",
+    "vol_4d_bp": "Rolling four-change root-mean-square of 10Y moves, basis points",
+    "target_next_10y_change_bp": "Next business-day 10Y yield change, basis points",
+    "regime_label": "Simple descriptive regime label"
+  }
+}

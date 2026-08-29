@@ -1,0 +1,5 @@
+task_id,tool,output_name,value,unit
+A01,curve_lookup,ten_year_rate,4.18,percent
+A02,bond_pricer,clean_price,97.42,price
+A03,spread_shock,loss_estimate,-2.35,USD million
+A04,report_validator,failed_checks,0,count

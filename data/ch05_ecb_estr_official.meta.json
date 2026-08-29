@@ -1,0 +1,30 @@
+{
+  "dataset_name": "ECB euro short-term rate (€STR)",
+  "local_filename": "ch05_ecb_estr_official.csv",
+  "source_institution": "European Central Bank",
+  "source_urls": [
+    "https://www.ecb.europa.eu/stats/financial_markets_and_interest_rates/euro_short-term_rate/html/index.en.html",
+    "https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT"
+  ],
+  "attribution": "Source: European Central Bank. Retrieved from official public endpoints.",
+  "retrieval_date_utc": "2026-05-26T06:51:20+00:00",
+  "snapshot_date_range": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "license_note": "ECB content may be reused with attribution subject to ECB terms. Retain the source reference in redistributed snapshots.",
+  "transformation_summary": "Queried the official ECB SDMX CSV endpoint for the 2024 €STR daily series and kept the main status fields.",
+  "chapter_usage": [
+    "ch05",
+    "ch06",
+    "ch11",
+    "ch21",
+    "ch25"
+  ],
+  "schema": {
+    "date": "Business date",
+    "estr": "Official €STR in percent",
+    "obs_status": "Observation status code",
+    "conf_status": "Confidentiality/status code"
+  }
+}

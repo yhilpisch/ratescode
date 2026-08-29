@@ -1,0 +1,6 @@
+metric,source_value,draft_value,unit,status
+portfolio_market_value,248.0,248.0,USD million,pass
+duration,6.4,6.4,years,pass
+dv01,15.9,15.9,USD thousand per bp,pass
+weekly_pnl,-3.2,-3.0,USD million,fail
+stress_loss,-8.6,-8.6,USD million,pass

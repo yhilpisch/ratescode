@@ -1,0 +1,6 @@
+issuer,rating,sector,spread_bp,spread_duration,pd,recovery,market_value
+Alpha Utilities,A,Utilities,115,4.2,0.004,0.45,5000000
+Beta Telecom,BBB,Communications,185,5.1,0.010,0.40,4000000
+Gamma Retail,BB,Consumer,310,3.8,0.030,0.35,3000000
+Delta Bank,A,Financials,135,4.7,0.006,0.40,4500000
+Epsilon Energy,BBB,Energy,240,4.4,0.018,0.35,2500000

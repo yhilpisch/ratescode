@@ -1,0 +1,5 @@
+task_id,task,required_tool,expected_unit
+A01,load_curve_node,curve_lookup,bp
+A02,price_bond,bond_pricer,price
+A03,shock_spread,spread_shock,USD million
+A04,validate_report,report_validator,status

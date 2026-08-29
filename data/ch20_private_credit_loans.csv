@@ -1,0 +1,4 @@
+borrower,loan,principal,base_rate,spread,ebitda,debt,interest
+Atlas Software,term loan,8000000,0.045,0.055,2200000,11500000,800000
+Beacon Health,unitranche,6500000,0.045,0.060,1800000,9000000,650000
+Cobalt Parts,term loan,5000000,0.045,0.070,1200000,7200000,575000

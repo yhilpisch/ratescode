@@ -1,0 +1,16 @@
+meeting_date,release_date,doc_type,title,url,prev_curve_date,y2_prev_pct,y2_curr_pct,y10_prev_pct,y10_curr_pct,delta_2y_bp,delta_10y_bp,delta_slope_bp
+2024-01-31,2024-02-21,minutes,"FOMC Minutes, January 30–31, 2024",https://www.federalreserve.gov/monetarypolicy/fomcminutes20240131.htm,2024-02-20,4.59,4.64,4.27,4.32,5.00,5.00,0.00
+2024-01-31,2024-01-31,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20240131a.htm,2024-01-30,4.36,4.27,4.06,3.99,-9.00,-7.00,2.00
+2024-03-20,2024-04-10,minutes,"FOMC Minutes, March 19-20, 2024",https://www.federalreserve.gov/monetarypolicy/fomcminutes20240320.htm,2024-04-09,4.74,4.97,4.36,4.55,23.00,19.00,-4.00
+2024-03-20,2024-03-20,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20240320a.htm,2024-03-19,4.68,4.59,4.30,4.27,-9.00,-3.00,6.00
+2024-05-01,2024-05-22,minutes,"FOMC Minutes, April 30-May 1, 2024",https://www.federalreserve.gov/monetarypolicy/fomcminutes20240501.htm,2024-05-21,4.82,4.86,4.41,4.43,4.00,2.00,-2.00
+2024-05-01,2024-05-01,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20240501a.htm,2024-04-30,5.04,4.96,4.69,4.63,-8.00,-6.00,2.00
+2024-06-12,2024-07-03,minutes,"FOMC Minutes, June 11-12, 2024",https://www.federalreserve.gov/monetarypolicy/fomcminutes20240612.htm,2024-07-02,4.74,4.71,4.43,4.36,-3.00,-7.00,-4.00
+2024-06-12,2024-06-12,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20240612a.htm,2024-06-11,4.81,4.75,4.39,4.31,-6.00,-8.00,-2.00
+2024-07-31,2024-08-21,minutes,"FOMC Minutes, July 30-31, 2024",https://www.federalreserve.gov/monetarypolicy/fomcminutes20240731.htm,2024-08-20,3.99,3.92,3.82,3.79,-7.00,-3.00,4.00
+2024-07-31,2024-07-31,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20240731a.htm,2024-07-30,4.35,4.29,4.15,4.09,-6.00,-6.00,-0.00
+2024-09-18,2024-10-09,minutes,"FOMC Minutes, September 17-18, 2024",https://www.federalreserve.gov/monetarypolicy/fomcminutes20240918.htm,2024-10-08,3.98,3.99,4.04,4.06,1.00,2.00,1.00
+2024-09-18,2024-09-18,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20240918a.htm,2024-09-17,3.59,3.61,3.65,3.70,2.00,5.00,3.00
+2024-11-07,2024-11-26,minutes,"FOMC Minutes, November 6-7, 2024",https://www.federalreserve.gov/monetarypolicy/fomcminutes20241107.htm,2024-11-25,4.21,4.21,4.27,4.30,0.00,3.00,3.00
+2024-11-07,2024-11-07,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20241107a.htm,2024-11-06,4.27,4.21,4.42,4.31,-6.00,-11.00,-5.00
+2024-12-18,2024-12-18,statement,Federal Reserve issues FOMC statement,https://www.federalreserve.gov/newsevents/pressreleases/monetary20241218a.htm,2024-12-17,4.25,4.35,4.40,4.50,10.00,10.00,0.00

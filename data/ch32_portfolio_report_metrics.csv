@@ -1,0 +1,6 @@
+metric,value,unit,date
+portfolio_market_value,248.0,USD million,2026-04-03
+duration,6.4,years,2026-04-03
+dv01,15.9,USD thousand per bp,2026-04-03
+weekly_pnl,-3.2,USD million,2026-04-03
+stress_loss,-8.6,USD million,2026-04-03

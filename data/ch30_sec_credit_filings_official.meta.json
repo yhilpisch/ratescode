@@ -1,0 +1,36 @@
+{
+  "dataset_name": "SEC credit-oriented filing metadata",
+  "local_filename": "ch30_sec_credit_filings_official.csv",
+  "source_institution": "U.S. Securities and Exchange Commission",
+  "source_urls": [
+    "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+    "https://www.sec.gov/files/company_tickers.json",
+    "https://data.sec.gov/submissions/"
+  ],
+  "attribution": "Source: U.S. Securities and Exchange Commission. Retrieved from official public endpoints.",
+  "retrieval_date_utc": "2026-05-26T06:51:27+00:00",
+  "snapshot_date_range": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "license_note": "SEC metadata is public. Filing documents remain subject to SEC and issuer terms. Retain source attribution and avoid bundling full filing text without a separate review.",
+  "transformation_summary": "Mapped selected public issuers from the official ticker file to their EDGAR submissions and kept 2024 filing metadata only.",
+  "chapter_usage": [
+    "ch28",
+    "ch30",
+    "ch31",
+    "ch32"
+  ],
+  "schema": {
+    "issuer": "SEC registrant name",
+    "ticker": "Primary stock ticker",
+    "cik": "Central Index Key",
+    "sic": "Reported SEC SIC code",
+    "sic_description": "Reported SEC industry description",
+    "filing_date": "SEC filing date",
+    "form_type": "SEC form type",
+    "accession_number": "Filing accession number",
+    "primary_document": "Primary filing document name",
+    "filing_url": "Official EDGAR archive URL"
+  }
+}

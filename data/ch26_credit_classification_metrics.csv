@@ -1,0 +1,4 @@
+model,precision,recall,accuracy
+rule,0.83,0.71,0.75
+logistic,1.00,0.833,0.917
+tree,0.80,0.86,0.79

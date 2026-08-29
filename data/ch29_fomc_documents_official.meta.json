@@ -1,0 +1,32 @@
+{
+  "dataset_name": "FOMC statements and minutes corpus",
+  "local_filename": "ch29_fomc_documents_official.csv",
+  "source_institution": "Board of Governors of the Federal Reserve System",
+  "source_urls": [
+    "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+  ],
+  "attribution": "Source: Board of Governors of the Federal Reserve System. Retrieved from official public endpoints.",
+  "retrieval_date_utc": "2026-05-26T06:51:25+00:00",
+  "snapshot_date_range": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "license_note": "Federal Reserve Board content is U.S. federal government information. Keep source attribution when redistributing the snapshot.",
+  "transformation_summary": "Collected 2024 FOMC statements and minutes from the official calendar page and stored cleaned article text.",
+  "chapter_usage": [
+    "ch28",
+    "ch29",
+    "ch31",
+    "ch32"
+  ],
+  "schema": {
+    "meeting_date": "Associated FOMC meeting date",
+    "release_date": "Published document date",
+    "doc_type": "statement or minutes",
+    "title": "Official page title",
+    "url": "Official document URL",
+    "document_text": "Cleaned text extracted from official HTML",
+    "text_sha256": "Hash of cleaned text",
+    "text_length": "Length of the cleaned text in characters"
+  }
+}

@@ -1,0 +1,5 @@
+template_id,use_case,input_object,required_fields,risk_control
+T01,portfolio_risk_note,curve_and_spread_table,"date;metric;value;unit;source",schema_check
+T02,model_card,validation_metrics,"model;metric;value;sample;caveat",metric_reconciliation
+T03,trade_summary,bond_trade_ticket,"isin;price;yield;dv01;settlement",source_trace
+T04,credit_update,issuer_memo,"issuer;spread;rating;trigger;snippet",citation_check

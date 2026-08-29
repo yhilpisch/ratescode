@@ -1,0 +1,6 @@
+source_id,metric,value,unit,confidence,needs_review
+curve_note,dv01,4.8,USD million per bp,0.92,0
+curve_note,ten_year_yield_change,12.0,bp,0.88,0
+curve_note,spread_change,18.0,bp,0.81,1
+liquidity_note,cash_buffer,52.0,USD million,0.90,0
+liquidity_note,weekly_outflow,14.0,USD million,0.79,1

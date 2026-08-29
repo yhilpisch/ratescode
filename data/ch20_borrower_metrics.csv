@@ -1,0 +1,4 @@
+borrower,covenant,max_leverage,min_coverage,recovery
+Atlas Software,maintenance,5.5,2.0,0.55
+Beacon Health,maintenance,5.25,1.8,0.50
+Cobalt Parts,maintenance,5.0,1.6,0.45

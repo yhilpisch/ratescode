@@ -1,0 +1,32 @@
+{
+  "dataset_name": "ECB euro area AAA yield curve",
+  "local_filename": "ch11_ecb_aaa_yield_curve_official.csv",
+  "source_institution": "European Central Bank",
+  "source_urls": [
+    "https://www.ecb.europa.eu/stats/financial_markets_and_interest_rates/euro_area_yield_curves/html/index.en.html",
+    "https://data-api.ecb.europa.eu/service/data/YC/"
+  ],
+  "attribution": "Source: European Central Bank. Retrieved from official public endpoints.",
+  "retrieval_date_utc": "2026-05-26T06:51:21+00:00",
+  "snapshot_date_range": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "license_note": "ECB content may be reused with attribution subject to ECB terms. Retain the source reference in redistributed snapshots.",
+  "transformation_summary": "Merged 2024 ECB AAA yield-curve tenors from the official SDMX endpoints into one date-indexed CSV.",
+  "chapter_usage": [
+    "ch04",
+    "ch11",
+    "ch21",
+    "ch25",
+    "ch29"
+  ],
+  "schema": {
+    "date": "Business date",
+    "1Y": "One-year AAA spot rate, percent",
+    "2Y": "Two-year AAA spot rate, percent",
+    "5Y": "Five-year AAA spot rate, percent",
+    "10Y": "Ten-year AAA spot rate, percent",
+    "30Y": "Thirty-year AAA spot rate, percent"
+  }
+}

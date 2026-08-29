@@ -1,0 +1,6 @@
+scenario,rate_2y_bp,rate_5y_bp,rate_10y_bp,spread_bp
+parallel up,25,25,25,0
+steepener,-5,10,35,0
+flattener,30,15,0,0
+spread widening,0,0,0,40
+recession shock,-20,15,45,80

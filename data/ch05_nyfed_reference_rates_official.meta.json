@@ -1,0 +1,38 @@
+{
+  "dataset_name": "NY Fed reference rates",
+  "local_filename": "ch05_nyfed_reference_rates_official.csv",
+  "source_institution": "Federal Reserve Bank of New York",
+  "source_urls": [
+    "https://www.newyorkfed.org/markets/reference-rates",
+    "https://markets.newyorkfed.org/api/rates/secured/sofr/search.xml?startDate=2024-01-01&endDate=2024-12-31",
+    "https://markets.newyorkfed.org/api/rates/unsecured/effr/search.xml?startDate=2024-01-01&endDate=2024-12-31",
+    "https://markets.newyorkfed.org/api/rates/unsecured/obfr/search.xml?startDate=2024-01-01&endDate=2024-12-31"
+  ],
+  "attribution": "Source: Federal Reserve Bank of New York. Retrieved from official public endpoints.",
+  "retrieval_date_utc": "2026-05-26T06:51:20+00:00",
+  "snapshot_date_range": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "license_note": "Federal Reserve Bank of New York data is public. Retain source attribution when redistributing the snapshot.",
+  "transformation_summary": "Combined 2024 SOFR, EFFR, and OBFR XML feeds into one long-form panel with rate-family labels.",
+  "chapter_usage": [
+    "ch05",
+    "ch06",
+    "ch11",
+    "ch21",
+    "ch25"
+  ],
+  "schema": {
+    "effective_date": "Rate effective date",
+    "rate_family": "SOFR, EFFR, or OBFR",
+    "rate": "Official rate in percent",
+    "percentile_1": "Published first percentile, percent",
+    "percentile_25": "Published 25th percentile, percent",
+    "percentile_75": "Published 75th percentile, percent",
+    "percentile_99": "Published 99th percentile, percent",
+    "target_rate_from": "Lower target band where available",
+    "target_rate_to": "Upper target band where available",
+    "volume_billions": "Daily transaction volume in USD billions"
+  }
+}

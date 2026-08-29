@@ -1,0 +1,74 @@
+# macOS
+ref/
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+*.pdf
+*.log
+figures/
+!code/figures/
+!code/figures/*.py
+reports/
+*.parquet
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+python.*
+
+# Python environments
+.env
+.venv
+env/
+venv/
+.python-version
+
+# Python packaging / build
+build/
+dist/
+*.egg-info/
+*.egg
+
+# LaTeX auxiliary files
+*.aux
+_minted*
+*.minted
+*.bbl
+*.bcf
+*.idx
+*.ilg
+*.ind
+*.blg
+*.fdb_latexmk
+*.listing
+*.fls
+*.lof
+*.swp
+*.xdv
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
+*.vrb
+*.run.xml
+terms.*
+math.*
+cases.*
+
+# LaTeX intermediate PDFs (if building multiple outputs)
+*-blx.bib
+
+# Editor / tooling
+.vscode/
+.idea/
+.mplconfig/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/

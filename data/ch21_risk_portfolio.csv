@@ -1,0 +1,5 @@
+instrument,type,market_value,dv01_2y,dv01_5y,dv01_10y,cs01
+Treasury 2Y,government,8000000,620,110,20,0
+Treasury 10Y,government,6000000,90,520,720,0
+IG 5Y corporate,credit,7000000,120,560,180,610
+BBB 10Y corporate,credit,4000000,40,280,620,520

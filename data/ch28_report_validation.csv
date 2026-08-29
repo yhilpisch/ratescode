@@ -1,0 +1,6 @@
+field,source_value,draft_value,status
+date,2026-04-03,2026-04-03,pass
+dv01,4.8,4.8,pass
+ten_year_yield_change,12.0,12.0,pass
+spread_change,18.0,16.0,fail
+cash_buffer,52.0,52.0,pass

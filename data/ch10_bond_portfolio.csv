@@ -1,0 +1,4 @@
+bond,market_value,duration,dv01
+short,4000000,2.1,840
+belly,3000000,5.0,1500
+long,3000000,8.7,2610

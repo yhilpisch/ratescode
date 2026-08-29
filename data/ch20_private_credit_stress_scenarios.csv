@@ -1,0 +1,5 @@
+scenario,base_rate_shock,ebitda_shock
+base,0.000,0.00
+higher rates,0.020,0.00
+earnings stress,0.010,-0.15
+severe stress,0.025,-0.25

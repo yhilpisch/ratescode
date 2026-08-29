@@ -1,0 +1,4 @@
+issuer,metric,extracted_value,threshold,unit,source_snippet,status
+Atlas Components,net_leverage,4.2,4.75,x,"caps net leverage at 4.75x",pass
+Beacon Health,interest_coverage,2.1,1.80,x,"coverage above 1.80x",pass
+Cedar Retail,net_leverage,3.7,4.25,x,"caps net leverage at 4.25x",pass

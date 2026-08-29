@@ -1,0 +1,4 @@
+issuer,headroom,risk_level,analyst_review
+Atlas Components,0.55,medium,required
+Beacon Health,0.30,medium,required
+Cedar Retail,0.55,low,optional

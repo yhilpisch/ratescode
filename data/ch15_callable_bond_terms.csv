@@ -1,0 +1,6 @@
+field,value
+coupon,0.045
+notional,100
+maturity_steps,4
+call_start_step,2
+call_price,100

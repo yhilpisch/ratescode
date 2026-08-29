@@ -1,0 +1,4 @@
+date,statement_id,policy_stance,inflation_concern,growth_concern,confidence
+2026-03-18,meeting_a,0.60,0.85,0.55,0.88
+2026-04-29,meeting_b,-0.15,0.45,0.30,0.82
+2026-06-10,meeting_c,0.90,0.92,0.25,0.91

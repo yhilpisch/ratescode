@@ -1,0 +1,5 @@
+scenario,rate_2y_bp,rate_5y_bp,rate_10y_bp,spread_bp
+rate selloff,40,45,50,5
+curve steepener,-10,10,45,10
+credit shock,5,10,15,90
+liquidity crisis,20,35,55,120

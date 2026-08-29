@@ -1,0 +1,5 @@
+scenario,asset_value,asset_volatility
+base,120,0.25
+higher leverage,105,0.25
+higher volatility,120,0.35
+stress,100,0.40

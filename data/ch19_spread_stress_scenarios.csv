@@ -1,0 +1,4 @@
+scenario,A_bp,BBB_bp,BB_bp
+mild widening,25,40,70
+credit selloff,60,100,180
+quality squeeze,20,80,220

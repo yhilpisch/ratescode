@@ -1,0 +1,4 @@
+issuer,sector,net_leverage,interest_coverage,maturity_year,covenant_text,risk_sentence
+Atlas Components,Industrial,4.2,2.6,2029,"Senior debt covenant caps net leverage at 4.75x.","Liquidity is adequate, but margin pressure could reduce covenant headroom."
+Beacon Health,Healthcare,5.1,2.1,2028,"Maintenance covenant requires interest coverage above 1.80x.","Free cash flow is improving, although refinancing risk remains material."
+Cedar Retail,Retail,3.7,3.4,2027,"Springing covenant caps net leverage at 4.25x when revolver usage exceeds 35 percent.","Inventory normalization has reduced near-term liquidity pressure."

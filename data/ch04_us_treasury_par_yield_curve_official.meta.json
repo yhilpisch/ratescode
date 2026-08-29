@@ -1,0 +1,41 @@
+{
+  "dataset_name": "U.S. Treasury daily par yield curve",
+  "local_filename": "ch04_us_treasury_par_yield_curve_official.csv",
+  "source_institution": "U.S. Department of the Treasury",
+  "source_urls": [
+    "https://home.treasury.gov/treasury-daily-interest-rate-xml-feed",
+    "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=2024"
+  ],
+  "attribution": "Source: U.S. Department of the Treasury. Retrieved from official public endpoints.",
+  "retrieval_date_utc": "2026-05-26T06:51:10+00:00",
+  "snapshot_date_range": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+  },
+  "license_note": "Treasury data is U.S. federal government information. Keep source attribution when reusing the snapshot.",
+  "transformation_summary": "Filtered the official 2024 XML feed to standard tenors and stored one row per business date.",
+  "chapter_usage": [
+    "ch04",
+    "ch06",
+    "ch07",
+    "ch11",
+    "ch21",
+    "ch25"
+  ],
+  "schema": {
+    "date": "Observation date",
+    "1M": "One-month nominal par yield, percent",
+    "2M": "Two-month nominal par yield, percent",
+    "3M": "Three-month nominal par yield, percent",
+    "4M": "Four-month nominal par yield, percent",
+    "6M": "Six-month nominal par yield, percent",
+    "1Y": "One-year nominal par yield, percent",
+    "2Y": "Two-year nominal par yield, percent",
+    "3Y": "Three-year nominal par yield, percent",
+    "5Y": "Five-year nominal par yield, percent",
+    "7Y": "Seven-year nominal par yield, percent",
+    "10Y": "Ten-year nominal par yield, percent",
+    "20Y": "Twenty-year nominal par yield, percent",
+    "30Y": "Thirty-year nominal par yield, percent"
+  }
+}

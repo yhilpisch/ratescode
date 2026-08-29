@@ -1,0 +1,4 @@
+model,kappa,theta,sigma,r0
+vasicek,0.65,0.040,0.012,0.035
+cir,0.70,0.042,0.080,0.035
+hull-white,0.55,0.039,0.010,0.035
