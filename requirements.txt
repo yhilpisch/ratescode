@@ -21,3 +21,4 @@ nbclient>=0.10
 
 # LaTeX minted (provides the `pygmentize` executable used by minted)
 Pygments>=2.16
+ipython-pygments-lexers>=1.1
