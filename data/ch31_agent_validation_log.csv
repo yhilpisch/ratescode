@@ -2,4 +2,4 @@ step,claim,tool_value,draft_value,status
 curve,10-year rate,4.18,4.18,pass
 valuation,clean price,97.42,97.42,pass
 stress,spread shock loss,-2.35,-2.30,fail
-report,failed checks,0,0,pass
+report,failed checks,1,0,fail

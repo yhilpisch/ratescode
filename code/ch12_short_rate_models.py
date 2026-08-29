@@ -24,6 +24,18 @@ def load_params() -> pd.DataFrame:
     return pd.read_csv(DATA / "ch12_short_rate_params.csv")
 
 
+def initial_zero_curve() -> pd.DataFrame:
+    """Load the initial curve used for Hull-White-style fitting."""
+    return pd.read_csv(DATA / "ch12_initial_zero_curve.csv")
+
+
+def hull_white_target(step: int, dt: float) -> float:
+    """Interpolate a deterministic target rate from the initial curve."""
+    curve = initial_zero_curve()
+    time = min((step + 1) * dt, float(curve["maturity"].max()))
+    return float(np.interp(time, curve["maturity"], curve["zero_rate"]))
+
+
 def simulate_paths(model: str, steps: int=12, paths: int=4) -> np.ndarray:
     """Simulate short-rate paths for one model."""
     params = load_params().set_index("model").loc[model]
@@ -40,9 +52,14 @@ def simulate_paths(model: str, steps: int=12, paths: int=4) -> np.ndarray:
         if model == "cir":
             root = np.sqrt(np.maximum(previous, 0.0))
             diffusion = sigma * root * np.sqrt(dt) * shock
+            target = theta
         else:
             diffusion = sigma * np.sqrt(dt) * shock
-        drift = kappa * (theta - previous) * dt
+            if model == "hull-white":
+                target = hull_white_target(step, dt)
+            else:
+                target = theta
+        drift = kappa * (target - previous) * dt
         rates[step + 1] = np.maximum(previous + drift + diffusion, -0.02)
     return rates
 

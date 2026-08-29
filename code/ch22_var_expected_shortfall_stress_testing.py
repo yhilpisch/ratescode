@@ -43,6 +43,24 @@ def var_es(level: float=0.95) -> dict[str, float]:
     return {"var": var, "es": float(tail.mean())}
 
 
+def var_backtest(level: float=0.95) -> pd.DataFrame:
+    """Count in-sample VaR exceptions for monitoring practice."""
+    losses = historical_losses()
+    threshold = var_es(level)["var"]
+    exceptions = losses > threshold
+    expected = (1 - level) * len(losses)
+    return pd.DataFrame([
+        {
+            "level": level,
+            "var": threshold,
+            "observations": len(losses),
+            "exceptions": int(exceptions.sum()),
+            "expected_exceptions": expected,
+            "exception_rate": float(exceptions.mean()),
+        }
+    ])
+
+
 def parametric_var(level: float=0.95) -> float:
     """Compute normal VaR from the factor covariance matrix."""
     changes = pd.read_csv(DATA / "ch22_factor_changes.csv")

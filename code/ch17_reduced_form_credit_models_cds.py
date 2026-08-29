@@ -25,16 +25,20 @@ def recovery_rate() -> float:
     return float(table["recovery"].iloc[0])
 
 
-def cds_inputs() -> pd.DataFrame:
+def cds_inputs(maturity: float | None=None) -> pd.DataFrame:
     """Load discount factors and CDS premium dates."""
     discount = pd.read_csv(DATA / "ch17_discount_curve.csv")
     schedule = pd.read_csv(DATA / "ch17_cds_schedule.csv")
-    return schedule.merge(discount, on="time")
+    table = schedule.merge(discount, on="time")
+    if maturity is not None:
+        table = table.loc[table["time"] <= maturity]
+    return table.reset_index(drop=True)
 
 
-def survival_curve(hazard: float=0.025) -> pd.DataFrame:
+def survival_curve(hazard: float=0.025,
+                   maturity: float | None=None) -> pd.DataFrame:
     """Compute survival probabilities for a constant hazard rate."""
-    table = cds_inputs()
+    table = cds_inputs(maturity)
     table["survival"] = np.exp(-hazard * table["time"])  # survival prob
     table["default_prob"] = -table["survival"].diff().fillna(
         table["survival"].iloc[0] - 1.0
@@ -44,9 +48,10 @@ def survival_curve(hazard: float=0.025) -> pd.DataFrame:
 
 
 def cds_legs(spread_bp: float=150.0,
-             hazard: float=0.025) -> dict[str, float]:
+             hazard: float=0.025,
+             maturity: float | None=None) -> dict[str, float]:
     """Compute approximate CDS premium and protection legs."""
-    curve = survival_curve(hazard)
+    curve = survival_curve(hazard, maturity)
     spread = spread_bp / 10000.0  # decimal spread
     premium = spread * (curve["alpha"] * curve["discount"]
                         * curve["survival"]).sum()
@@ -72,7 +77,7 @@ def repricing_table() -> pd.DataFrame:
     rows = []  # calibration diagnostics
     for _, row in quotes.iterrows():
         hazard = implied_hazard(row["spread_bp"])
-        legs = cds_legs(row["spread_bp"], hazard)
+        legs = cds_legs(row["spread_bp"], hazard, row["maturity"])
         residual = legs["premium_leg"] - legs["protection_leg"]
         rows.append({
             "maturity": row["maturity"],

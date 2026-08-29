@@ -58,7 +58,7 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
 
     loss = losses()
-    var = float(np.quantile(loss, 0.95, method="higher"))
+    var = float(np.quantile(loss, 0.95, method="lower"))
     es = float(loss[loss >= var].mean())
     stress = stress_losses()
 
