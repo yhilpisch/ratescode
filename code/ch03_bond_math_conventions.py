@@ -26,8 +26,8 @@ def actual_360(start: date, end: date) -> float:
     return days / 360.0
 
 
-def thirty_360(start: date, end: date) -> float:
-    """Return a simple 30/360 accrual fraction."""
+def thirty_e_360(start: date, end: date) -> float:
+    """Return 30E/360 accrual (both calendar day numbers capped at 30)."""
     days = 360 * (end.year - start.year)  # year component
     days += 30 * (end.month - start.month)  # month component
     days += min(end.day, 30) - min(start.day, 30)  # day component
@@ -41,7 +41,7 @@ def accrued_interest() -> dict[str, float]:
     annual_coupon_cash = 5.00  # annual coupon cash
     return {
         "act_360": annual_coupon_cash * actual_360(last_coupon, settlement),
-        "30_360": annual_coupon_cash * thirty_360(last_coupon, settlement),
+        "30E_360": annual_coupon_cash * thirty_e_360(last_coupon, settlement),
     }
 
 

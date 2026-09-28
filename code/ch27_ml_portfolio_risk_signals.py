@@ -17,9 +17,6 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
-FEATURES = ["rate_level", "rate_slope", "spread", "volatility", "cs01"]
-
-
 def load_panel() -> pd.DataFrame:
     """Load the frozen portfolio signal panel."""
     return pd.read_csv(DATA / "ch27_portfolio_signal_panel.csv")
@@ -34,28 +31,27 @@ def rule_alerts() -> pd.DataFrame:
     return panel[["date", "rule_alert", "stress"]]
 
 
-def logistic_scores() -> pd.DataFrame:
-    """Compute interpretable logistic-style stress scores."""
+def illustrative_scores() -> pd.DataFrame:
+    """Apply the chapter's fixed, hand-specified stress-score formula.
+
+    This is a transparent teaching rule, not a fitted ML model. Fixed
+    coefficients avoid estimating normalization from future panel rows.
+    """
     panel = load_panel()
-    x = panel[FEATURES].to_numpy(float)
-    mean = x.mean(axis=0)
-    scale = x.std(axis=0) + 1e-12
-    x_scaled = (x - mean) / scale
-    weights = np.array([0.25, 0.15, 0.75, 0.65, 0.35])
-    score = x_scaled @ weights
-    panel["ml_score"] = 1.0 / (1.0 + np.exp(-score))
-    panel["ml_alert"] = (panel["ml_score"] >= 0.55).astype(int)
-    return panel[["date", "ml_score", "ml_alert", "stress"]]
+    score = -8.0 + 0.03 * panel["spread"] + 0.18 * panel["volatility"]
+    panel["score"] = 1.0 / (1.0 + np.exp(-score))
+    panel["score_alert"] = (panel["score"] >= 0.55).astype(int)
+    return panel[["date", "score", "score_alert", "stress"]]
 
 
 def alert_metrics() -> pd.DataFrame:
-    """Compare rule-based and ML-style alerts."""
+    """Compare alerts descriptively on the same synthetic sample."""
     rule = rule_alerts()
-    ml = logistic_scores()
+    score = illustrative_scores()
     rows = []  # alert diagnostics
     for name, column, frame in [
         ("rule", "rule_alert", rule),
-        ("ml", "ml_alert", ml),
+        ("fixed score", "score_alert", score),
     ]:
         tp = int(((frame[column] == 1) & (frame["stress"] == 1)).sum())
         fp = int(((frame[column] == 1) & (frame["stress"] == 0)).sum())
@@ -68,7 +64,7 @@ def alert_metrics() -> pd.DataFrame:
 
 def main() -> None:
     """Print a compact chapter result summary."""
-    print(logistic_scores().round({"ml_score": 3}))
+    print(illustrative_scores().round({"score": 3}))
     print(alert_metrics().round(3))
 
 

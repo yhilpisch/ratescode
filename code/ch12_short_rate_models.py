@@ -25,15 +25,23 @@ def load_params() -> pd.DataFrame:
 
 
 def initial_zero_curve() -> pd.DataFrame:
-    """Load the initial curve used for Hull-White-style fitting."""
+    """Load the curve used by the Hull-White-style target proxy."""
     return pd.read_csv(DATA / "ch12_initial_zero_curve.csv")
 
 
 def hull_white_target(step: int, dt: float) -> float:
-    """Interpolate a deterministic target rate from the initial curve."""
+    """Return the zero-rate proxy used by the Hull-White-style toy process.
+
+    This is not the time-dependent Hull-White drift parameter and does not
+    make the simulated process fit the initial discount curve. Flat endpoint
+    extension is explicit because early monthly steps precede the first node.
+    """
     curve = initial_zero_curve()
-    time = min((step + 1) * dt, float(curve["maturity"].max()))
-    return float(np.interp(time, curve["maturity"], curve["zero_rate"]))
+    time = (step + 1) * dt
+    maturities = curve["maturity"].to_numpy(float)
+    rates = curve["zero_rate"].to_numpy(float)
+    return float(np.interp(time, maturities, rates,
+                           left=rates[0], right=rates[-1]))
 
 
 def simulate_paths(model: str, steps: int=12, paths: int=4) -> np.ndarray:
@@ -60,20 +68,36 @@ def simulate_paths(model: str, steps: int=12, paths: int=4) -> np.ndarray:
             else:
                 target = theta
         drift = kappa * (target - previous) * dt
-        rates[step + 1] = np.maximum(previous + drift + diffusion, -0.02)
+        candidate = previous + drift + diffusion
+        if model == "cir":
+            rates[step + 1] = np.maximum(candidate, 0.0)  # projected Euler step
+        else:
+            rates[step + 1] = candidate  # normal models may be negative
     return rates
 
 
-def zero_price_from_mean_path(model: str, maturity: float=1.0) -> float:
-    """Approximate a zero-coupon price from the average short-rate path.
+def zero_coupon_price_mc(
+    model: str,
+    maturity: float=1.0,
+    paths: int=10_000,
+) -> tuple[float, float]:
+    """Estimate a zero price and sampling error by discounting each path.
 
-    This uses the path-averaged short rate rather than integrating along
-    each path; it is a pedagogical simplification of the exact
-    discount-factor average exp(-cumsum(r*dt)).
+    The standard error does not include monthly time-discretization or model
+    error.
     """
-    paths = simulate_paths(model)
-    mean_rate = float(paths.mean(axis=1).mean())  # average short rate
-    return float(np.exp(-mean_rate * maturity))
+    dt = 1.0 / 12.0
+    steps = int(round(maturity / dt))
+    if maturity <= 0.0 or not np.isclose(steps * dt, maturity):
+        raise ValueError("maturity must be a positive whole number of months")
+    if paths < 2:
+        raise ValueError("at least two paths are required")
+    rate_paths = simulate_paths(model, steps=steps, paths=paths)
+    integrals = rate_paths[:-1].sum(axis=0) * dt  # left-endpoint path integral
+    discounts = np.exp(-integrals)  # average pathwise discount factors
+    price = float(discounts.mean())
+    standard_error = float(discounts.std(ddof=1) / np.sqrt(paths))
+    return price, standard_error
 
 
 def model_summary() -> pd.DataFrame:
@@ -81,11 +105,13 @@ def model_summary() -> pd.DataFrame:
     rows = []  # model diagnostics
     for model in load_params()["model"]:
         paths = simulate_paths(model)
+        zero_price, zero_se = zero_coupon_price_mc(model)
         rows.append({
             "model": model,
             "mean_final": float(paths[-1].mean()),
             "min_rate": float(paths.min()),
-            "zero_1y": zero_price_from_mean_path(model),
+            "zero_1y_mc": zero_price,
+            "zero_1y_mc_se": zero_se,
         })
     return pd.DataFrame(rows)
 

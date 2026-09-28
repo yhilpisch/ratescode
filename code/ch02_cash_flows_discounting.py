@@ -38,9 +38,17 @@ def compounding_comparison(
     rate: float=0.04,
     time: float=2.0,
 ) -> dict[str, float]:
-    """Compare simple, annual, and continuous discount factors."""
+    """Compare simple, annual-effective, and continuous discount factors."""
+    if not np.isfinite(rate) or not np.isfinite(time):
+        raise ValueError("rate and time must be finite")
+    if time < 0.0:
+        raise ValueError("time must be non-negative")
+    if 1.0 + rate * time <= 0.0:
+        raise ValueError("simple-compounding accumulation must be positive")
+    if 1.0 + rate <= 0.0:
+        raise ValueError("annual-effective rate must exceed -100%")
     simple = 1.0 / (1.0 + rate * time)  # simple discount
-    annual = 1.0 / (1.0 + rate) ** int(time)  # annual discount
+    annual = (1.0 + rate) ** (-time)  # annual-effective fractional power
     continuous = float(np.exp(-rate * time))  # continuous discount
     return {
         "simple": simple,

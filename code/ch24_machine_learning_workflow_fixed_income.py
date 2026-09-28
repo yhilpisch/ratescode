@@ -28,8 +28,20 @@ def load_panel() -> pd.DataFrame:
 def time_split() -> tuple[pd.DataFrame, pd.DataFrame]:
     """Return a simple chronological train/test split."""
     panel = load_panel()
+    panel["date"] = pd.to_datetime(panel["date"], errors="raise")
+    panel = panel.sort_values("date").reset_index(drop=True)
+    if panel["date"].duplicated().any():
+        raise ValueError("the teaching panel requires unique observation dates")
+    panel["target_end_date"] = panel["date"].shift(-1)
     split = int(len(panel) * 0.70)  # chronological split point
-    return panel.iloc[:split].copy(), panel.iloc[split:].copy()
+    if split < 1 or split >= len(panel):
+        raise ValueError("the panel must have training and test observations")
+    train = panel.iloc[:split].copy()
+    test = panel.iloc[split:].copy()
+    train = train.loc[train["target_end_date"] < test["date"].iloc[0]]
+    if train.empty:
+        raise ValueError("the split must leave non-empty training rows")
+    return train.copy(), test
 
 
 def ridge_predict(alpha: float=1.0) -> pd.DataFrame:

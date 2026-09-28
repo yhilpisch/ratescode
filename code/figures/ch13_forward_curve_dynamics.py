@@ -37,12 +37,12 @@ def load_inputs() -> pd.DataFrame:
 
 
 def simulate_paths(paths: int=20) -> np.ndarray:
-    """Simulate simplified terminal forward curves."""
+    """Simulate terminal curves with a shared one-factor Gaussian shock."""
     inputs = load_inputs()
     base = inputs["forward_rate"].to_numpy(float)
     vol = inputs["volatility"].to_numpy(float)
     rng = np.random.default_rng(1300)
-    shocks = rng.standard_normal((paths, len(base)))
+    shocks = rng.standard_normal((paths, 1))
     return base + vol * shocks * np.sqrt(0.5)
 
 

@@ -37,7 +37,11 @@ def hjm_drift() -> pd.DataFrame:
 
 def simulate_forward_paths(steps: int=6,
                            paths: int=3) -> pd.DataFrame:
-    """Simulate simplified forward-rate paths (additive/Gaussian HJM)."""
+    """Simulate a one-factor HJM-style sketch with common tenor shocks.
+
+    The drift proxy is not a calibrated, measure-validated HJM specification
+    and must not be used for derivative valuation.
+    """
     inputs = load_forward_inputs()
     drift = hjm_drift()["drift_proxy"].to_numpy(float)
     volatility = inputs["volatility"].to_numpy(float)
@@ -47,9 +51,9 @@ def simulate_forward_paths(steps: int=6,
     for path in range(paths):
         rates = inputs["forward_rate"].to_numpy(float).copy()
         for _ in range(steps):
-            shocks = rng.standard_normal(len(rates))
+            shock = rng.standard_normal()  # common one-factor shock by tenor
             # HJM: additive evolution in forward rate
-            rates += volatility * np.sqrt(dt) * shocks
+            rates += volatility * np.sqrt(dt) * shock
             rates += drift * dt
         for maturity, rate in zip(inputs["maturity"], rates, strict=True):
             rows.append({"path": path, "maturity": maturity, "rate": rate})

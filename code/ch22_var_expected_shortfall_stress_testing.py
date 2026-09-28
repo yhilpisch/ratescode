@@ -30,45 +30,62 @@ def load_exposures() -> pd.Series:
 def historical_losses() -> pd.Series:
     """Convert historical factor changes into positive loss numbers."""
     changes = pd.read_csv(DATA / "ch22_factor_changes.csv")
+    dates = pd.to_datetime(changes["date"], errors="raise")
+    if not dates.is_monotonic_increasing or dates.duplicated().any():
+        raise ValueError("factor changes must have unique, increasing dates")
     exposures = load_exposures()  # currency loss per bp
     loss = (changes[FACTOR_COLS] * exposures).sum(axis=1)
+    loss.index = dates
     return loss.rename("loss")
 
 
 def var_es(level: float=0.95) -> dict[str, float]:
     """Compute historical VaR and expected shortfall."""
+    if not 0.0 < level < 1.0:
+        raise ValueError("level must lie strictly between zero and one")
     losses = historical_losses()
     var = float(np.quantile(losses, level, method="lower"))
     tail = losses[losses >= var]  # losses beyond VaR threshold
     return {"var": var, "es": float(tail.mean())}
 
 
-def var_backtest(level: float=0.95) -> pd.DataFrame:
-    """Count in-sample VaR exceptions for monitoring practice."""
+def var_backtest(
+    level: float=0.95,
+    min_observations: int=20,
+) -> pd.DataFrame:
+    """Forecast VaR from prior losses and test it on each next observation."""
     losses = historical_losses()
-    threshold = var_es(level)["var"]
-    exceptions = losses > threshold
-    expected = (1 - level) * len(losses)
-    return pd.DataFrame([
-        {
+    if not 0.0 < level < 1.0:
+        raise ValueError("level must lie strictly between zero and one")
+    if min_observations < 2 or len(losses) <= min_observations:
+        raise ValueError("need more observations than the initial window")
+    rows = []  # each VaR uses only strictly earlier losses
+    for index in range(min_observations, len(losses)):
+        history = losses.iloc[:index]
+        realized = float(losses.iloc[index])
+        threshold = float(np.quantile(history, level, method="lower"))
+        rows.append({
+            "date": losses.index[index],
             "level": level,
             "var": threshold,
-            "observations": len(losses),
-            "exceptions": int(exceptions.sum()),
-            "expected_exceptions": expected,
-            "exception_rate": float(exceptions.mean()),
-        }
-    ])
+            "loss": realized,
+            "exception": realized > threshold,
+            "training_observations": index,
+        })
+    return pd.DataFrame(rows)
 
 
 def parametric_var(level: float=0.95) -> float:
-    """Compute normal VaR from the factor covariance matrix."""
+    """Compute normal VaR using the sample mean loss and factor covariance."""
+    if not 0.0 < level < 1.0:
+        raise ValueError("level must lie strictly between zero and one")
     changes = pd.read_csv(DATA / "ch22_factor_changes.csv")
     exposures = load_exposures().reindex(FACTOR_COLS).to_numpy(float)
     cov = changes[FACTOR_COLS].cov().to_numpy(float)  # factor covariance
     sigma = float(np.sqrt(exposures @ cov @ exposures))  # loss volatility
+    mean_loss = float(changes[FACTOR_COLS].mean().to_numpy() @ exposures)
     z_value = NormalDist().inv_cdf(level)
-    return z_value * sigma
+    return mean_loss + z_value * sigma
 
 
 def stress_losses() -> pd.DataFrame:
@@ -99,6 +116,7 @@ def main() -> None:
     """Print a compact chapter result summary."""
     print(risk_report().round(2))
     print(stress_losses().round(2))
+    print(var_backtest().head().round(2))
 
 
 if __name__ == "__main__":

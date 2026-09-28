@@ -40,7 +40,7 @@ def main() -> None:
     plt.style.use("seaborn-v0_8-whitegrid")
     fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
     axes[0].bar(metrics["model"], metrics["recall"], color=BLUE)
-    axes[0].set_title("Stress recall", color=NAVY)
+    axes[0].set_title("Illustrative stress recall", color=NAVY)
     axes[0].set_ylabel("Recall")
 
     axes[1].barh(importance.index, importance.values, color=ORANGE)

@@ -46,9 +46,9 @@ def main() -> None:
     axes[0].set_ylabel("Loss")
     axes[0].legend(frameon=False, fontsize=8)
 
-    axes[1].plot(alerts["date"], alerts["ml_score"], color=ORANGE,
+    axes[1].plot(alerts["date"], alerts["score"], color=ORANGE,
                  marker="o")
-    axes[1].set_title("ML stress score", color=NAVY)
+    axes[1].set_title("Fixed logistic-style score", color=NAVY)
     axes[1].set_ylabel("Score")
     axes[1].set_ylim(0, 1.05)
 

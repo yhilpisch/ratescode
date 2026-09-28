@@ -18,7 +18,7 @@ os.environ.setdefault("SOURCE_DATE_EPOCH", "1767225600")
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import sys
 
 
 NAVY = "#001F5B"
@@ -26,27 +26,13 @@ BLUE = "#2F6DB5"
 ORANGE = "#D9822B"
 LIGHT_BLUE = "#8CB6E8"
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "code"))
+from ch12_short_rate_models import simulate_paths
 
 
 def simulate(model: str, steps: int=24) -> np.ndarray:
-    """Simulate one deterministic short-rate path."""
-    row = pd.read_csv(DATA / "ch12_short_rate_params.csv")
-    params = row.set_index("model").loc[model]
-    kappa = float(params["kappa"])
-    theta = float(params["theta"])
-    sigma = float(params["sigma"])
-    rates = np.empty(steps + 1)
-    rates[0] = float(params["r0"])
-    rng = np.random.default_rng(1200 + len(model))
-    dt = 1.0 / 12.0
-    for step in range(steps):
-        shock = rng.standard_normal()
-        root = np.sqrt(max(rates[step], 0.0)) if model == "cir" else 1.0
-        diffusion = sigma * root * np.sqrt(dt) * shock
-        drift = kappa * (theta - rates[step]) * dt
-        rates[step + 1] = max(rates[step] + drift + diffusion, -0.02)
-    return rates
+    """Return a path from the chapter's canonical model implementation."""
+    return simulate_paths(model, steps=steps, paths=1)[:, 0]
 
 
 def main() -> None:

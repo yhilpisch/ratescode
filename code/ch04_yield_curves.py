@@ -25,7 +25,7 @@ def load_curve() -> pd.DataFrame:
 
 
 def curve_table() -> pd.DataFrame:
-    """Return discount factors and one-period forward rates."""
+    """Return node discounts and continuously compounded interval forwards."""
     curve = load_curve()  # zero-rate nodes
     times = curve["maturity"].to_numpy(float)  # maturities
     rates = curve["zero_rate"].to_numpy(float)  # zero rates
@@ -35,21 +35,25 @@ def curve_table() -> pd.DataFrame:
                                            rates[:-1], rates[1:]):
         numerator = rate_r * right - rate_l * left
         forwards.append(numerator / (right - left))  # interval forward
-    curve["forward_rate"] = forwards
+    curve["forward_cc"] = forwards
     return curve
 
 
 def interpolate_discount(maturity: float=3.0) -> float:
-    """Interpolate a continuously compounded zero discount factor."""
+    """Interpolate log discounts inside the supplied maturity range."""
     curve = load_curve()
-    rate = float(np.interp(maturity, curve["maturity"], curve["zero_rate"]))
-    return float(np.exp(-rate * maturity))
+    times = curve["maturity"].to_numpy(float)
+    if not np.isfinite(maturity) or not times[0] <= maturity <= times[-1]:
+        raise ValueError("maturity must be finite and within the curve nodes")
+    log_discounts = -curve["zero_rate"].to_numpy(float) * times
+    log_discount = np.interp(maturity, times, log_discounts)
+    return float(np.exp(log_discount))
 
 
 def main() -> None:
     """Print a compact chapter result summary."""
     frame = curve_table()  # curve diagnostics
-    discount = interpolate_discount()  # three-year discount factor
+    discount = interpolate_discount()  # log-discount interpolated 3Y factor
     print(frame.round(6))
     print(f"discount_3y: {discount:.6f}")
 

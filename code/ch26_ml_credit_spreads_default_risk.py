@@ -30,14 +30,30 @@ def sigmoid(values: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-values))
 
 
+def chronological_split() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Train on earlier issuer dates and hold out the final observed date."""
+    panel = load_panel()
+    panel["date"] = pd.to_datetime(panel["date"], errors="raise")
+    panel = panel.sort_values(["date", "issuer"]).reset_index(drop=True)
+    dates = panel["date"].drop_duplicates().sort_values()
+    if len(dates) < 2:
+        raise ValueError("at least two observation dates are required")
+    cutoff = dates.iloc[-1]
+    train = panel.loc[panel["date"] < cutoff].copy()
+    test = panel.loc[panel["date"] == cutoff].copy()
+    return train, test
+
+
 def fit_logistic(
+    train: pd.DataFrame,
     steps: int=100,
     lr: float=0.10,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Fit a small logistic classifier by gradient descent."""
-    panel = load_panel()
-    x = panel[FEATURES].to_numpy(float)
-    y = panel["label"].to_numpy(float)
+    """Fit logistic regression and scaling parameters on training rows only."""
+    if steps < 1 or lr <= 0.0:
+        raise ValueError("steps and learning rate must be positive")
+    x = train[FEATURES].to_numpy(float)
+    y = train["label"].to_numpy(float)
     mean = x.mean(axis=0)
     scale = x.std(axis=0) + 1e-12
     x_scaled = np.c_[np.ones(len(x)), (x - mean) / scale]
@@ -50,18 +66,19 @@ def fit_logistic(
 
 
 def classification_table() -> pd.DataFrame:
-    """Return predictions and labels for the credit classifier."""
-    panel = load_panel()
-    beta, mean, scale = fit_logistic()
-    x = panel[FEATURES].to_numpy(float)
+    """Return final-date holdout predictions for the synthetic credit panel."""
+    train, test = chronological_split()
+    beta, mean, scale = fit_logistic(train)
+    x = test[FEATURES].to_numpy(float)
     x_scaled = np.c_[np.ones(len(x)), (x - mean) / scale]
-    panel["probability"] = sigmoid(x_scaled @ beta)
-    panel["prediction"] = (panel["probability"] >= 0.5).astype(int)
-    return panel[["issuer", "rating", "label", "probability", "prediction"]]
+    test["probability"] = sigmoid(x_scaled @ beta)
+    test["prediction"] = (test["probability"] >= 0.5).astype(int)
+    return test[["date", "issuer", "rating", "label", "probability",
+                 "prediction"]]
 
 
 def metrics() -> pd.DataFrame:
-    """Compute precision, recall, and accuracy."""
+    """Compute descriptive metrics on the final-date synthetic holdout."""
     table = classification_table()
     tp = int(((table["prediction"] == 1) & (table["label"] == 1)).sum())
     fp = int(((table["prediction"] == 1) & (table["label"] == 0)).sum())
@@ -70,6 +87,7 @@ def metrics() -> pd.DataFrame:
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     return pd.DataFrame([{
+        "test_observations": len(table),
         "precision": precision,
         "recall": recall,
         "accuracy": accuracy,
