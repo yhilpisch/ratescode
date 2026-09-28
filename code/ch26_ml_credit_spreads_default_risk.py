@@ -31,15 +31,25 @@ def sigmoid(values: np.ndarray) -> np.ndarray:
 
 
 def chronological_split() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Train on earlier issuer dates and hold out the final observed date."""
+    """Hold out the last snapshot for contemporaneous stress classification."""
     panel = load_panel()
-    panel["date"] = pd.to_datetime(panel["date"], errors="raise")
+    for column in ["date", "feature_available_date", "label_end_date"]:
+        panel[column] = pd.to_datetime(panel[column], errors="raise")
+    if panel[["date", "feature_available_date",
+              "label_end_date"]].isna().any().any():
+        raise ValueError("all panel timing fields must be present")
+    if (panel["feature_available_date"] > panel["date"]).any():
+        raise ValueError("features cannot arrive after the snapshot date")
+    if (panel["label_end_date"] != panel["date"]).any():
+        raise ValueError("this panel contains same-date stress labels only")
+    if panel.duplicated(["date", "issuer"]).any():
+        raise ValueError("issuer and snapshot date must be unique")
     panel = panel.sort_values(["date", "issuer"]).reset_index(drop=True)
     dates = panel["date"].drop_duplicates().sort_values()
     if len(dates) < 2:
         raise ValueError("at least two observation dates are required")
     cutoff = dates.iloc[-1]
-    train = panel.loc[panel["date"] < cutoff].copy()
+    train = panel.loc[panel["label_end_date"] < cutoff].copy()
     test = panel.loc[panel["date"] == cutoff].copy()
     return train, test
 
@@ -66,12 +76,12 @@ def fit_logistic(
 
 
 def classification_table() -> pd.DataFrame:
-    """Return final-date holdout predictions for the synthetic credit panel."""
+    """Describe final-date same-snapshot synthetic stress classification."""
     train, test = chronological_split()
     beta, mean, scale = fit_logistic(train)
     x = test[FEATURES].to_numpy(float)
     x_scaled = np.c_[np.ones(len(x)), (x - mean) / scale]
-    test["probability"] = sigmoid(x_scaled @ beta)
+    test["probability"] = sigmoid(x_scaled @ beta)  # uncalibrated score
     test["prediction"] = (test["probability"] >= 0.5).astype(int)
     return test[["date", "issuer", "rating", "label", "probability",
                  "prediction"]]

@@ -29,15 +29,23 @@ def price_from_yield(yield_pa: float, freq: int=2) -> float:
 
 
 def yield_from_price(price: float, freq: int=2) -> float:
-    """Recover yield by bisection from a target price."""
+    """Recover a yield only when the target price lies in the bracket."""
     low, high = 0.0, 0.20  # search bracket
+    if not np.isfinite(price) or price <= 0 or freq <= 0:
+        raise ValueError("price and frequency must be positive and finite")
+    if not price_from_yield(high, freq) <= price <= price_from_yield(low, freq):
+        raise ValueError("price lies outside the 0%-20% yield bracket")
     for _ in range(80):
         mid = 0.5 * (low + high)  # candidate yield
         if price_from_yield(mid, freq) > price:
             low = mid
         else:
             high = mid
-    return 0.5 * (low + high)
+    recovered = 0.5 * (low + high)
+    if not np.isclose(price_from_yield(recovered, freq), price,
+                      rtol=1e-10, atol=1e-10):
+        raise ValueError("yield did not reprice the requested bond")
+    return recovered
 
 
 def roundtrip_check() -> dict[str, float]:

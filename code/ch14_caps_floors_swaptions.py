@@ -10,7 +10,7 @@ https://hilpisch.com | https://linktr.ee/dyjh
 from __future__ import annotations
 
 import importlib.util
-from math import exp, log, sqrt
+from math import isfinite, log, sqrt
 from pathlib import Path
 
 import pandas as pd
@@ -35,7 +35,18 @@ normal_cdf = load_normal_cdf()
 
 def black_call(forward: float, strike: float, vol: float,
                expiry: float) -> float:
-    """Return Black call value per unit annuity or accrual."""
+    """Return ordinary Black-76 call per unit annuity or accrual.
+
+    Nonpositive forwards require a different model (normal or shifted).
+    """
+    if not all(map(isfinite, (forward, strike, vol, expiry))):
+        raise ValueError("Black inputs must be finite")
+    if forward <= 0 or strike <= 0 or vol < 0 or expiry < 0:
+        raise ValueError(
+            "Black requires positive rates and non-negative vol/time"
+        )
+    if vol == 0 or expiry == 0:
+        return max(forward - strike, 0.0)
     sigma_root = vol * sqrt(expiry)
     d1 = (log(forward / strike) + 0.5 * sigma_root ** 2) / sigma_root
     d2 = d1 - sigma_root

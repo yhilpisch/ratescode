@@ -34,11 +34,11 @@ def portfolio_dv01() -> float:
 
 
 def hedge_ratio() -> float:
-    """Return the number of futures contracts for a DV01 hedge."""
+    """Return the signed (short) futures count for a DV01 hedge."""
     params = contract_parameters()
     ctd_dv01 = params["ctd_dv01"]  # CTD bond DV01
     futures_dv01 = ctd_dv01 / params["conversion_factor"]  # futures DV01
-    return portfolio_dv01() / futures_dv01
+    return -portfolio_dv01() / futures_dv01
 
 
 def hedge_pnl() -> pd.DataFrame:
@@ -47,9 +47,9 @@ def hedge_pnl() -> pd.DataFrame:
     shock_bp = params["shock_bp"]  # parallel rate shock
     ctd_dv01 = params["ctd_dv01"]  # CTD bond DV01
     futures_dv01 = ctd_dv01 / params["conversion_factor"]  # futures DV01
-    contracts = hedge_ratio()  # DV01-neutral contract count
+    contracts = round(hedge_ratio())  # tradable short contract count
     portfolio_loss = -portfolio_dv01() * shock_bp  # bond loss
-    futures_gain = contracts * futures_dv01 * shock_bp  # hedge gain
+    futures_gain = -contracts * futures_dv01 * shock_bp  # short hedge gain
     return pd.DataFrame([{
         "shock_bp": shock_bp,
         "portfolio_pnl": portfolio_loss,
@@ -61,7 +61,7 @@ def hedge_pnl() -> pd.DataFrame:
 def main() -> None:
     """Print a compact chapter result summary."""
     print(f"portfolio_dv01: {portfolio_dv01():.2f}")
-    print(f"hedge_contracts: {hedge_ratio():.2f}")
+    print(f"hedge_contracts: {round(hedge_ratio())}")
     print(hedge_pnl().round(2))
 
 

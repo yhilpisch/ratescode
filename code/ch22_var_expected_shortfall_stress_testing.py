@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from statistics import NormalDist
+from math import ceil
 
 import numpy as np
 import pandas as pd
@@ -40,12 +41,13 @@ def historical_losses() -> pd.Series:
 
 
 def var_es(level: float=0.95) -> dict[str, float]:
-    """Compute historical VaR and expected shortfall."""
+    """Compute historical VaR and the mean of the worst empirical losses."""
     if not 0.0 < level < 1.0:
         raise ValueError("level must lie strictly between zero and one")
     losses = historical_losses()
     var = float(np.quantile(losses, level, method="lower"))
-    tail = losses[losses >= var]  # losses beyond VaR threshold
+    count = max(1, ceil((1.0 - level) * len(losses) - 1e-12))
+    tail = losses.nlargest(count)  # avoid ties at VaR enlarging the tail
     return {"var": var, "es": float(tail.mean())}
 
 

@@ -1,10 +1,24 @@
 # Notebooks Overview
 
 This folder contains companion notebooks for all chapters and appendices in
-*Python & AI for Rates, Bonds, and Credit*. Each chapter notebook introduces
-the corresponding book chapter, points to the source script, runs the script
-from the project root, and leaves space for extension into richer classroom
-workflows.
+*Python & AI for Rates, Bonds, and Credit*. Each notebook follows the book's
+visual identity, explains the calculation before running code, includes a
+guided mini-lab, and ends with short exercises. Code cells are unexecuted in
+the distributed notebooks.
+
+## Run in Google Colab
+
+Open any notebook and select its **Open in Google Colab** link. The setup cell
+clones the public [ratescode repository](https://github.com/yhilpisch/ratescode)
+into a fresh Colab runtime, or reuses an existing checkout. Run the notebook
+from the top; the setup resolves the repository paths and installs only the
+core packages if they are missing. No Google Drive mount or credentials are
+required.
+
+The Colab setup assumes the repository's default `main` branch. If you are
+working from another branch or a local checkout, run the setup cell there; it
+detects the existing repository root. Examples use the bundled, frozen data
+snapshots rather than live market feeds.
 
 ## Chapter notebooks
 
@@ -52,5 +66,6 @@ workflows.
 - `appx_g_optimization_refresher.ipynb` — Appx G Optimization Refresher.
 - `appx_h_mathematical_notation_reference.ipynb` — Appx H Mathematical Notation Reference.
 
-Run the notebooks from this directory or from the repository root. The path
-setup cells detect both locations.
+For local use, install the packages in `requirements.txt` and launch Jupyter
+from this directory or the repository root. The setup cells detect both
+locations.

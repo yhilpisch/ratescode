@@ -49,10 +49,9 @@ def survival_curve(hazard: float=0.025,
     """Compute survival probabilities for a constant hazard rate."""
     table = cds_inputs(maturity)
     table["survival"] = np.exp(-hazard * table["time"])
-    table["default_prob"] = -table["survival"].diff().fillna(
-        table["survival"].iloc[0] - 1.0
+    table["default_prob"] = (
+        table["survival"].shift(1, fill_value=1.0) - table["survival"]
     )
-    table["default_prob"] = table["default_prob"].abs()
     return table
 
 
@@ -98,7 +97,7 @@ def main() -> None:
 
     axes[1].bar(quotes["maturity"].astype(str), residuals, color=ORANGE)
     axes[1].axhline(0, color=NAVY, lw=1)
-    axes[1].set_title("CDS repricing residuals", color=NAVY)
+    axes[1].set_title("Flat-hazard quote residuals", color=NAVY)
     axes[1].set_xlabel("Maturity")
     axes[1].set_ylabel("PV residual")
 

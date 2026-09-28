@@ -44,15 +44,22 @@ def hull_white_target(step: int, dt: float) -> float:
                            left=rates[0], right=rates[-1]))
 
 
-def simulate_paths(model: str, steps: int=12, paths: int=4) -> np.ndarray:
-    """Simulate short-rate paths for one model."""
+def simulate_paths(
+    model: str, steps: int=12, paths: int=4,
+    steps_per_year: int=12, seed: int | None=None,
+) -> np.ndarray:
+    """Simulate illustrative short-rate paths on an annualised time grid."""
+    if steps < 1 or paths < 1 or steps_per_year < 1:
+        raise ValueError("steps, paths and steps_per_year must be positive")
     params = load_params().set_index("model").loc[model]
     kappa = float(params["kappa"])
     theta = float(params["theta"])
     sigma = float(params["sigma"])
     r0 = float(params["r0"])
-    dt = 1.0 / 12.0
-    rng = np.random.default_rng(100 + len(model))  # deterministic seed
+    dt = 1.0 / steps_per_year
+    rng = np.random.default_rng(
+        100 + len(model) if seed is None else seed
+    )
     rates = np.full((steps + 1, paths), r0)  # path matrix
     for step in range(steps):
         shock = rng.standard_normal(paths)
@@ -80,19 +87,28 @@ def zero_coupon_price_mc(
     model: str,
     maturity: float=1.0,
     paths: int=10_000,
+    steps_per_year: int=12,
+    seed: int | None=None,
 ) -> tuple[float, float]:
-    """Estimate a zero price and sampling error by discounting each path.
+    """Estimate a teaching-model discount factor and sampling error.
 
-    The standard error does not include monthly time-discretization or model
-    error.
+    No risk-neutral calibration is established. The standard error excludes
+    discretization and model error.
     """
-    dt = 1.0 / 12.0
+    if steps_per_year < 1:
+        raise ValueError("steps_per_year must be positive")
+    if not np.isfinite(maturity) or maturity <= 0:
+        raise ValueError("maturity must be finite and positive")
+    dt = 1.0 / steps_per_year
     steps = int(round(maturity / dt))
-    if maturity <= 0.0 or not np.isclose(steps * dt, maturity):
-        raise ValueError("maturity must be a positive whole number of months")
+    if not np.isclose(steps * dt, maturity):
+        raise ValueError("maturity must align with the simulation grid")
     if paths < 2:
         raise ValueError("at least two paths are required")
-    rate_paths = simulate_paths(model, steps=steps, paths=paths)
+    rate_paths = simulate_paths(
+        model, steps=steps, paths=paths,
+        steps_per_year=steps_per_year, seed=seed,
+    )
     integrals = rate_paths[:-1].sum(axis=0) * dt  # left-endpoint path integral
     discounts = np.exp(-integrals)  # average pathwise discount factors
     price = float(discounts.mean())
@@ -116,9 +132,28 @@ def model_summary() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def grid_diagnostics(model: str="vasicek") -> pd.DataFrame:
+    """Expose grid and seed sensitivity without claiming calibration."""
+    rows = []
+    for steps_per_year in (12, 52):
+        for seed in (101, 202, 303):
+            estimate, se = zero_coupon_price_mc(
+                model, paths=2_000, steps_per_year=steps_per_year,
+                seed=seed,
+            )
+            rows.append({
+                "steps_per_year": steps_per_year,
+                "seed": seed,
+                "estimate": estimate,
+                "sampling_se": se,
+            })
+    return pd.DataFrame(rows)
+
+
 def main() -> None:
     """Print a compact chapter result summary."""
     print(model_summary().round(5))
+    print(grid_diagnostics().round(5))
 
 
 if __name__ == "__main__":

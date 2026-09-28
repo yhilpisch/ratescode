@@ -25,6 +25,18 @@ Open notebooks in JupyterLab or another notebook environment and run cells from
 top to bottom. The notebooks are intentionally transparent and use relative
 paths so that calculations can be inspected and adapted.
 
+### Google Colab
+
+The chapter and appendix notebooks link directly to Google Colab. Open a
+notebook through its link and run the setup cell first. It clones this
+repository into the Colab runtime, resolves the data and code paths, and checks
+the core scientific Python packages. No Google Drive mount or credentials are
+required. The examples use the frozen snapshots included here, not live market
+feeds.
+
+For local work, the same setup cell detects an existing checkout. Alternatively,
+install `requirements.txt` and launch Jupyter from the repository root.
+
 ## Data
 
 Official datasets include `.meta.json` sidecars. Synthetic and pedagogical CSV

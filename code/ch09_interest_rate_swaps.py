@@ -24,9 +24,11 @@ def load_inputs() -> pd.DataFrame:
 
 
 def par_swap_rate() -> float:
-    """Compute the fixed rate that makes the swap value zero."""
+    """Compute the multi-curve par rate from projected floating coupons."""
     table = load_inputs()
-    float_leg = 1.0 - float(table["discount"].iloc[-1])  # float-leg value
+    float_leg = float(
+        (table["forward"] * table["alpha"] * table["discount"]).sum()
+    )
     annuity = float((table["alpha"] * table["discount"]).sum())  # PVBP
     return float_leg / annuity  # par fixed rate
 
@@ -36,21 +38,22 @@ def swap_value(fixed_rate: float=0.04,
     """Value a receive-fixed swap against the frozen curve."""
     table = load_inputs()
     annuity = float((table["alpha"] * table["discount"]).sum())  # PVBP
-    float_leg = 1.0 - float(table["discount"].iloc[-1])  # float value
+    float_leg = float(
+        (table["forward"] * table["alpha"] * table["discount"]).sum()
+    )
     fixed_leg = fixed_rate * annuity  # fixed value
     return notional * (fixed_leg - float_leg)  # receive-fixed value
 
 
 def swap_dv01(fixed_rate: float=0.04) -> float:
-    """Approximate signed DV01 from a rough one-bp discount bump."""
-    base = load_inputs()
-    bumped = base.copy()  # simple parallel discount shock
-    bumped["discount"] *= 1.0 - 0.0001 * bumped["period"]
-    annuity = float((bumped["alpha"] * bumped["discount"]).sum())  # PVBP
-    float_leg = 1.0 - float(bumped["discount"].iloc[-1])  # shocked float
-    fixed_leg = fixed_rate * annuity  # shocked fixed
-    bumped_value = 100_000_000.0 * (fixed_leg - float_leg)  # shocked value
-    return swap_value(fixed_rate) - bumped_value  # signed DV01
+    """Return positive receiver DV01 magnitude for a one-bp forward bump.
+
+    Hold discount factors fixed; this isolates projection-curve risk rather
+    than representing a joint discount/projection-curve shock.
+    """
+    table = load_inputs()
+    annuity = float((table["alpha"] * table["discount"]).sum())
+    return 100_000_000.0 * annuity * 0.0001
 
 
 def summary_table() -> pd.DataFrame:

@@ -12,6 +12,7 @@ VaR, expected shortfall, and stress figure for Chapter 22.
 from __future__ import annotations
 
 import os
+from math import ceil
 from pathlib import Path
 
 os.environ.setdefault("SOURCE_DATE_EPOCH", "1767225600")
@@ -59,7 +60,8 @@ def main() -> None:
 
     loss = losses()
     var = float(np.quantile(loss, 0.95, method="lower"))
-    es = float(loss[loss >= var].mean())
+    count = max(1, ceil(0.05 * len(loss) - 1e-12))
+    es = float(loss.nlargest(count).mean())
     stress = stress_losses()
 
     plt.style.use("seaborn-v0_8-whitegrid")

@@ -40,20 +40,52 @@ def borrower_metrics() -> pd.DataFrame:
 
 
 def stress_table() -> pd.DataFrame:
-    """Apply base-rate and EBITDA stress scenarios."""
+    """Aggregate borrower-level stress results by scenario."""
+    details = borrower_stress()
+    return details.groupby("scenario", sort=False).agg(
+        min_coverage=("coverage", "min"),
+        income=("coupon_income", "sum"),
+        leverage_breaches=("leverage_breach", "sum"),
+        coverage_breaches=("coverage_breach", "sum"),
+    ).reset_index()
+
+
+def borrower_stress() -> pd.DataFrame:
+    """Report each borrower's covenant status for the frozen scenarios.
+
+    Only the sampled floating loan principal passes a base-rate shock through
+    to total borrower interest; all other interest is held fixed.
+    """
     book = loan_book()
     scenarios = pd.read_csv(DATA / "ch20_private_credit_stress_scenarios.csv")
     rows = []  # stress diagnostics
     for _, scenario in scenarios.iterrows():
         stressed_rate = book["base_rate"] + scenario["base_rate_shock"]
-        interest = book["principal"] * (stressed_rate + book["spread"])
+        income = book["principal"] * (stressed_rate + book["spread"])
+        interest = (
+            book["interest"] + book["principal"] * scenario["base_rate_shock"]
+        )
         ebitda = book["ebitda"] * (1.0 + scenario["ebitda_shock"])
         coverage = ebitda / interest
-        rows.append({
-            "scenario": scenario["scenario"],
-            "min_coverage": float(coverage.min()),
-            "income": float(interest.sum()),
-        })
+        leverage = book["debt"] / ebitda
+        for idx in book.index:
+            rows.append({
+                "scenario": scenario["scenario"],
+                "borrower": book.loc[idx, "borrower"],
+                "coupon_income": float(income.loc[idx]),
+                "leverage": float(leverage.loc[idx]),
+                "coverage": float(coverage.loc[idx]),
+                "leverage_headroom": float(
+                    book.loc[idx, "max_leverage"] - leverage.loc[idx]
+                ),
+                "coverage_headroom": float(
+                    coverage.loc[idx] - book.loc[idx, "min_coverage"]
+                ),
+            })
+    detail = pd.DataFrame(rows)
+    detail["leverage_breach"] = detail["leverage_headroom"] < 0
+    detail["coverage_breach"] = detail["coverage_headroom"] < 0
+    return detail
     return pd.DataFrame(rows)
 
 
@@ -65,6 +97,7 @@ def covenant_snippets() -> pd.DataFrame:
 def main() -> None:
     """Print a compact chapter result summary."""
     print(borrower_metrics().round(3))
+    print(borrower_stress().round(3))
     print(stress_table().round(3))
     print(covenant_snippets()[["borrower"]])
 

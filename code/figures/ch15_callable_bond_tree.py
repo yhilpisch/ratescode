@@ -67,7 +67,7 @@ def main() -> None:
 
     plt.style.use("seaborn-v0_8-whitegrid")
     fig, ax = plt.subplots(figsize=(6.8, 3.8))
-    colors = [ORANGE if x + 1 >= terms["call_start_step"] else BLUE
+    colors = [ORANGE if x >= terms["call_start_step"] else BLUE
               for x in xs]
     ax.scatter(xs, ys, s=360, color=colors, edgecolor=NAVY)
     for x, y, rate in zip(xs, ys, rates, strict=True):

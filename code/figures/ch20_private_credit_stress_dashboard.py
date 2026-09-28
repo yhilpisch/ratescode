@@ -40,9 +40,11 @@ def main() -> None:
     stress = pd.read_csv(DATA / "ch20_private_credit_stress_scenarios.csv")
     values = []
     for scenario in stress.itertuples():
-        rate = book["base_rate"] + scenario.base_rate_shock + book["spread"]
         ebitda = book["ebitda"] * (1.0 + scenario.ebitda_shock)
-        coverage = ebitda / (book["principal"] * rate)
+        interest = (
+            book["interest"] + book["principal"] * scenario.base_rate_shock
+        )
+        coverage = ebitda / interest
         values.append(float(coverage.min()))
 
     plt.style.use("seaborn-v0_8-whitegrid")

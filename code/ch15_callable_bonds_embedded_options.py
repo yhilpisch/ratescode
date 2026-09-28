@@ -64,7 +64,7 @@ def bond_value(callable_bond: bool=True,
         for node, rate in enumerate(tree[step]):
             expected = 0.5 * values[node] + 0.5 * values[node + 1]
             continuation = (coupon + expected) / (1.0 + rate * inputs["dt"])
-            if callable_bond and step + 1 >= call_start:
+            if callable_bond and step >= call_start:
                 continuation = min(continuation, call_price)
             new_values.append(continuation)
         values = new_values

@@ -47,11 +47,37 @@ def stress_losses() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def allocation_table() -> pd.DataFrame:
-    """Load simple allocation candidates and rank by spread per CS01."""
+def allocation_table(notional: float=10_000_000.0) -> pd.DataFrame:
+    """Compare candidate carry and losses on the same synthetic notional.
+
+    Candidate CS01 inputs are assumed to refer to this 10m portfolio.
+    Rating default rates and recoveries are illustrative issuer-weighted
+    proxies; stress shocks assume CS01 follows the candidate rating weights.
+    """
+    if notional != 10_000_000.0:
+        raise ValueError("candidate CS01 values assume a 10m notional")
     table = pd.read_csv(DATA / "ch19_allocation_candidates.csv")
-    table["spread_per_cs01"] = table["spread_bp"] / table["cs01"]
-    return table.sort_values("spread_per_cs01", ascending=False)
+    issuers = portfolio()
+    loss_rate = issuers["pd"] * (1.0 - issuers["recovery"])
+    proxies = (
+        (issuers["market_value"] * loss_rate).groupby(issuers["rating"]).sum()
+        / issuers.groupby("rating")["market_value"].sum()
+    )
+    shock = pd.read_csv(DATA / "ch19_spread_stress_scenarios.csv")
+    selloff = shock.set_index("scenario").loc["credit selloff"]
+    weights = [f"{rating}_weight" for rating in ["A", "BBB", "BB"]]
+    table["annual_spread_carry"] = notional * table["spread_bp"] / 10000.0
+    table["expected_loss_proxy"] = notional * sum(
+        table[f"{rating}_weight"] * proxies[rating]
+        for rating in ["A", "BBB", "BB"]
+    )
+    table["selloff_loss"] = table["cs01"] * sum(
+        table[f"{rating}_weight"] * selloff[f"{rating}_bp"]
+        for rating in ["A", "BBB", "BB"]
+    )
+    if not (table[weights].sum(axis=1) - 1.0).abs().lt(1e-9).all():
+        raise ValueError("candidate rating weights must sum to one")
+    return table
 
 
 def main() -> None:

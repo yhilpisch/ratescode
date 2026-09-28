@@ -38,12 +38,13 @@ def cds_inputs(maturity: float | None=None) -> pd.DataFrame:
 def survival_curve(hazard: float=0.025,
                    maturity: float | None=None) -> pd.DataFrame:
     """Compute survival probabilities for a constant hazard rate."""
+    if not np.isfinite(hazard) or hazard < 0.0:
+        raise ValueError("hazard must be a non-negative finite rate")
     table = cds_inputs(maturity)
     table["survival"] = np.exp(-hazard * table["time"])  # survival prob
-    table["default_prob"] = -table["survival"].diff().fillna(
-        table["survival"].iloc[0] - 1.0
+    table["default_prob"] = (
+        table["survival"].shift(1, fill_value=1.0) - table["survival"]
     )
-    table["default_prob"] = table["default_prob"].abs()
     return table
 
 
