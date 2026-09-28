@@ -51,8 +51,9 @@ def allocation_table(notional: float=10_000_000.0) -> pd.DataFrame:
     """Compare candidate carry and losses on the same synthetic notional.
 
     Candidate CS01 inputs are assumed to refer to this 10m portfolio.
-    Rating default rates and recoveries are illustrative issuer-weighted
-    proxies; stress shocks assume CS01 follows the candidate rating weights.
+    Default rates are treated as one-year probabilities; rating/recovery
+    inputs are issuer-weighted proxies. The stress assumes candidate CS01
+    follows the candidate rating weights.
     """
     if notional != 10_000_000.0:
         raise ValueError("candidate CS01 values assume a 10m notional")
