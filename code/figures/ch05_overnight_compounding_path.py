@@ -40,21 +40,36 @@ def main() -> None:
     compounded = np.cumprod(1.0 + overnight * tau) - 1.0
     simple = np.cumsum(overnight * tau)
 
-    plt.style.use("seaborn-v0_8-whitegrid")
-    fig, ax = plt.subplots(figsize=(7.0, 3.6))
-    ax.plot(days, compounded * 10000, color=NAVY, lw=2.2, label="compounded")
-    ax.plot(days, simple * 10000, "--", color=ORANGE, lw=1.8, label="simple")
-    daily_accrual = overnight * tau * 10000  # daily accrual in basis points
-    ax.bar(days, daily_accrual, color=BLUE, alpha=0.18, label="daily accrual")
+    excess_bp = (compounded - simple) * 10000
 
-    ax.set_title("Overnight compounding accumulates day by day", color=NAVY)
-    ax.set_xlabel("Accrual day")
-    ax.set_ylabel("Cumulative return in basis points")
-    ax.legend(frameon=False, loc="upper left")
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.tick_params(colors=NAVY)
-    ax.xaxis.label.set_color(NAVY)
-    ax.yaxis.label.set_color(NAVY)
+    plt.style.use("seaborn-v0_8-whitegrid")
+    fig, axes = plt.subplots(
+        2, 1, figsize=(7.0, 3.6), sharex=True,
+        gridspec_kw={"height_ratios": [2.0, 1.0]},
+    )
+    axes[0].plot(
+        days, compounded * 10000, color=NAVY, marker="o", lw=2.2,
+        label="compounded",
+    )
+    axes[0].plot(
+        days, simple * 10000, "--", color=ORANGE, marker="s", lw=1.8,
+        label="simple accumulation",
+    )
+    axes[0].set_title("Daily overnight accrual", color=NAVY)
+    axes[0].set_ylabel("Cumulative return (bp)")
+    axes[0].legend(frameon=False, loc="upper left")
+
+    axes[1].plot(days, excess_bp, color=BLUE, marker="o", lw=2.0)
+    axes[1].axhline(0.0, color=NAVY, lw=0.8)
+    axes[1].set_title("Compounding excess", color=NAVY)
+    axes[1].set_xlabel("Accrual day")
+    axes[1].set_ylabel("Excess (bp)")
+
+    for ax in axes:
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.tick_params(colors=NAVY)
+        ax.xaxis.label.set_color(NAVY)
+        ax.yaxis.label.set_color(NAVY)
 
     fig.tight_layout()
     fig.savefig(out / "ch05_overnight_compounding_path.pdf")

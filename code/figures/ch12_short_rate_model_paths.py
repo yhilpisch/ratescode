@@ -44,14 +44,15 @@ def main() -> None:
     colors = {"vasicek": BLUE, "cir": ORANGE, "hull-white": LIGHT_BLUE}
 
     plt.style.use("seaborn-v0_8-whitegrid")
-    fig, ax = plt.subplots(figsize=(7.0, 3.8))
+    plt.rcParams.update({"font.size": 12})
+    fig, ax = plt.subplots(figsize=(7.8, 2.7))
     for model, color in colors.items():
         ax.plot(months, simulate(model) * 100, color=color,
-                label=model.title())
-    ax.set_title("Short-rate model paths", color=NAVY)
+                label=("Time-varying target proxy"
+                       if model == "hull-white" else model.title()))
     ax.set_xlabel("Month")
-    ax.set_ylabel("Short rate percent")
-    ax.legend(frameon=False, fontsize=8)
+    ax.set_ylabel("Short rate (%)")
+    ax.legend(frameon=False, fontsize=10)
     ax.tick_params(colors=NAVY)
     ax.xaxis.label.set_color(NAVY)
     ax.yaxis.label.set_color(NAVY)

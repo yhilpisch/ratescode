@@ -46,39 +46,52 @@ def simulate_paths(paths: int=20) -> np.ndarray:
     return base + vol * shocks * np.sqrt(0.5)
 
 
-def main() -> None:
-    """Create the forward curve dynamics figure."""
-    out = ROOT / "figures"
-    out.mkdir(parents=True, exist_ok=True)
-
+def draw_scenarios(ax) -> None:
+    """Draw unpriced six-month terminal scenarios with common shocks."""
     inputs = load_inputs()
     maturities = inputs["maturity"].to_numpy(float)
-    paths = simulate_paths()
+    for idx, path in enumerate(simulate_paths()[:8]):
+        ax.plot(maturities, path * 100, color=LIGHT_BLUE, alpha=0.8,
+                label="Six-month scenarios" if idx == 0 else None)
+    ax.plot(maturities, inputs["forward_rate"] * 100, color=NAVY,
+            lw=2, label="Initial snapshot")
+    ax.set(xlabel="Fixed maturity from today (years)",
+           ylabel="Forward rate (%)")
+    ax.legend(frameon=False, fontsize=10)
 
+
+def draw_volatility(ax) -> None:
+    """Draw absolute Gaussian volatilities, not Black volatilities."""
+    inputs = load_inputs()
+    ax.bar(inputs["maturity"], inputs["volatility"] * 10000,
+           width=0.3, color=ORANGE)
+    ax.set(xlabel="Fixed maturity from today (years)",
+           ylabel="Absolute volatility (bp/sqrt(year))")
+
+
+def main() -> None:
+    """Create a book composite and separate slide diagnostics."""
+    out = ROOT / "figures"
+    out.mkdir(parents=True, exist_ok=True)
     plt.style.use("seaborn-v0_8-whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
-    axes[0].plot(maturities, inputs["forward_rate"] * 100,
-                 color=NAVY, lw=2, label="initial")
-    for path in paths[:8]:
-        axes[0].plot(maturities, path * 100, color=LIGHT_BLUE, alpha=0.55)
-    axes[0].set_title("Forward-curve paths", color=NAVY)
-    axes[0].set_xlabel("Maturity")
-    axes[0].set_ylabel("Forward rate percent")
-
-    axes[1].bar(maturities, inputs["volatility"] * 10000, color=ORANGE)
-    axes[1].set_title("Volatility assumptions", color=NAVY)
-    axes[1].set_xlabel("Maturity")
-    axes[1].set_ylabel("Volatility bp")
-
-    for ax in axes:
+    plt.rcParams.update({"font.size": 12})
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.4))
+    draws = [draw_scenarios, draw_volatility]
+    for ax, draw in zip(axes, draws):
+        draw(ax)
         ax.tick_params(colors=NAVY)
-        ax.xaxis.label.set_color(NAVY)
-        ax.yaxis.label.set_color(NAVY)
         ax.spines[["top", "right"]].set_visible(False)
-
     fig.tight_layout()
     fig.savefig(out / "ch13_forward_curve_dynamics.pdf")
     plt.close(fig)
+    for suffix, draw in zip(["scenarios", "volatility"], draws):
+        fig, ax = plt.subplots(figsize=(7.8, 2.7))
+        draw(ax)
+        ax.tick_params(colors=NAVY)
+        ax.spines[["top", "right"]].set_visible(False)
+        fig.tight_layout()
+        fig.savefig(out / f"ch13_forward_{suffix}_slides.pdf")
+        plt.close(fig)
 
 
 if __name__ == "__main__":

@@ -67,15 +67,15 @@ def main() -> None:
         forward_grid,
         forward_zero * 100,
         color=BLUE,
-        label="from linear zero",
+        label="linear zero interpolation",
     )
     axes[1].plot(
         forward_grid,
         forward_log_discount * 100,
         color=ORANGE,
-        label="from log discount",
+        label="log-discount interpolation",
     )
-    axes[1].set_title("Forward-rate diagnostic", color=NAVY)
+    axes[1].set_title("Local forward rates", color=NAVY)
 
     for ax in axes:
         ax.set_xlabel("Maturity in years")

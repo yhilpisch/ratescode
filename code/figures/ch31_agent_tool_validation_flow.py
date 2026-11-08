@@ -13,48 +13,65 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 
 os.environ.setdefault("SOURCE_DATE_EPOCH", "1767225600")
 
-import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
-
-NAVY = "#001F5B"
-BLUE = "#2F6DB5"
-ORANGE = "#D9822B"
-LIGHT_BLUE = "#8CB6E8"
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "code"))
+from credit_figure_layout import (
+    NAVY, BLUE, ORANGE, export_panels, legend_above,
+)
+
+from genai_figure_checks import agent_checks
+
+
+def draw_claims(ax) -> None:
+    """Keep unlike units in labelled rows instead of a common value axis."""
+    table = agent_checks()
+    labels = ["10Y rate (%)", "Clean price (quote)", "Stress P/L (USD m)",
+              "Initial failure count"]
+    cells = [[label, f"{row.tool_value:g}", f"{row.draft_value:g}",
+              row.computed_status] for label, row in
+             zip(labels, table.itertuples())]
+    ax.axis("off")
+    artist = ax.table(cellText=cells,
+                      colLabels=["Within-log claim", "Reference", "Draft",
+                                 "Numeric check"],
+                      colWidths=[0.44, 0.17, 0.17, 0.22],
+                      cellLoc="left", colLoc="left", loc="center")
+    artist.auto_set_font_size(False)
+    artist.set_fontsize(12 if ax.figure.get_figwidth() < 10 else 10)
+    artist.scale(1, 1.65)
+    for (row, col), cell in artist.get_celld().items():
+        cell.set_edgecolor("#D8E1EB")
+        cell.get_text().set_color(NAVY)
+        if row == 0:
+            cell.set_facecolor("#E7EEF8")
+        elif row >= 3:
+            cell.set_facecolor("#FFF0E0")
+
+
+def draw_counts(ax) -> None:
+    """Count executed agreement tests, including the false report claim."""
+    table = agent_checks()
+    counts = table.computed_status.value_counts().reindex(["pass", "fail"])
+    bars = ax.bar(["Numeric agreement", "Mismatch"], counts,
+                  color=[BLUE, ORANGE])
+    ax.bar_label(bars, fmt="%.0f", padding=3, color=NAVY)
+    ax.set(ylabel="Within-log comparisons", ylim=(0, 3), yticks=range(4))
 
 
 def main() -> None:
-    """Create the agent tool-validation flow figure."""
-    out = ROOT / "figures"
-    out.mkdir(parents=True, exist_ok=True)
-    tools = pd.read_csv(DATA / "ch31_tool_outputs.csv")
-    log = pd.read_csv(DATA / "ch31_agent_validation_log.csv")
-    counts = log["status"].value_counts().reindex(["pass", "fail"])
-
-    plt.style.use("seaborn-v0_8-whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
-    axes[0].barh(tools["output_name"], tools["value"], color=BLUE)
-    axes[0].set_title("Tool outputs", color=NAVY)
-    axes[0].set_xlabel("Value")
-
-    axes[1].bar(counts.index, counts.values, color=[LIGHT_BLUE, ORANGE])
-    axes[1].set_title("Claim validation", color=NAVY)
-    axes[1].set_ylabel("Checks")
-
-    for ax in axes:
-        ax.tick_params(colors=NAVY)
-        ax.xaxis.label.set_color(NAVY)
-        ax.yaxis.label.set_color(NAVY)
-        ax.spines[["top", "right"]].set_visible(False)
-
-    fig.tight_layout()
-    fig.savefig(out / "ch31_agent_tool_validation_flow.pdf")
-    plt.close(fig)
+    """Export unit-labelled claim rows and their narrow numeric-check counts."""
+    export_panels("ch31_agent_tool_validation_flow", [
+        ("claims", "Within-log claim comparisons", draw_claims),
+        ("counts", "Recomputed numeric agreement", draw_counts),
+    ])
 
 
 if __name__ == "__main__":

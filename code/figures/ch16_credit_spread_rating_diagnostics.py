@@ -13,55 +13,50 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 
 os.environ.setdefault("SOURCE_DATE_EPOCH", "1767225600")
 
-import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
 
-
-NAVY = "#001F5B"
-BLUE = "#2F6DB5"
-ORANGE = "#D9822B"
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "code"))
+from credit_figure_layout import (
+    NAVY, BLUE, ORANGE, export_panels, legend_above,
+)
+
+from ch16_credit_spreads_ratings_default_risk import expected_loss_table
+
+
+def draw_ratings(ax) -> None:
+    """Draw unweighted rating averages from all five synthetic issuers."""
+    values = expected_loss_table().groupby("rating").spread_bp.mean()
+    values = values.reindex(["A", "BBB", "BB"])
+    bars = ax.bar(values.index, values, color=BLUE)
+    ax.bar_label(bars, fmt="%.1f", padding=3, color=NAVY)
+    ax.set(xlabel="Rating bucket", ylabel="Annual spread quote (bp)")
+    ax.margins(y=0.18)
+
+
+def draw_losses(ax) -> None:
+    """Compare distinct measures with their horizons in the legend."""
+    table = expected_loss_table()
+    x = np.arange(len(table))
+    ax.bar(x - 0.18, table.spread_bp, width=0.36, color=BLUE,
+           label="Spread (annual bp)")
+    ax.bar(x + 0.18, table.expected_loss_bp, width=0.36, color=ORANGE,
+           label="One-year EL (bp of EAD)")
+    ax.set_xticks(x, [name.split()[0] for name in table.issuer])
+    ax.set(xlabel="Synthetic issuer", ylabel="Basis points")
+    legend_above(ax)
 
 
 def main() -> None:
-    """Create the credit spread and rating diagnostics figure."""
-    out = ROOT / "figures"
-    out.mkdir(parents=True, exist_ok=True)
-
-    panel = pd.read_csv(DATA / "ch16_synthetic_issuer_panel.csv")
-    spreads = pd.read_csv(DATA / "ch16_credit_spread_panel.csv")
-    panel["expected_loss_bp"] = panel["pd"] * (1 - panel["recovery"]) * 10000
-
-    plt.style.use("seaborn-v0_8-whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
-    rating_avg = panel.groupby("rating")["spread_bp"].mean()
-    axes[0].bar(rating_avg.index, rating_avg.values, color=BLUE)
-    axes[0].set_title("Average spread by rating", color=NAVY)
-    axes[0].set_ylabel("Spread bp")
-
-    x = range(len(panel))
-    axes[1].bar(x, panel["spread_bp"], color=BLUE, label="spread")
-    axes[1].bar(x, panel["expected_loss_bp"], color=ORANGE,
-                label="expected loss")
-    axes[1].set_xticks(list(x))
-    axes[1].set_xticklabels(panel["rating"])
-    axes[1].set_title("Spread versus expected loss", color=NAVY)
-    axes[1].set_ylabel("Basis points")
-    axes[1].legend(frameon=False, fontsize=8)
-
-    for ax in axes:
-        ax.tick_params(colors=NAVY)
-        ax.xaxis.label.set_color(NAVY)
-        ax.yaxis.label.set_color(NAVY)
-        ax.spines[["top", "right"]].set_visible(False)
-
-    fig.tight_layout()
-    fig.savefig(out / "ch16_credit_spread_rating_diagnostics.pdf")
-    plt.close(fig)
+    """Create rating and loss comparisons without overlapping bars."""
+    export_panels("ch16_credit_spread_rating_diagnostics", [
+        ("ratings", "Average spread by rating", draw_ratings),
+        ("loss", "Spread and one-year loss fraction", draw_losses),
+    ])
 
 
 if __name__ == "__main__":

@@ -47,50 +47,65 @@ normal_cdf = load_normal_cdf()
 
 def black_call(forward: float, strike: float, vol: float,
                expiry: float) -> float:
-    """Return Black call value per unit notional."""
+    """Return undiscounted Black call value in rate units."""
     root = vol * sqrt(expiry)
     d1 = (log(forward / strike) + 0.5 * root ** 2) / root
     d2 = d1 - root
     return forward * normal_cdf(d1) - strike * normal_cdf(d2)
 
 
-def main() -> None:
-    """Create the rates option surface figure."""
-    out = ROOT / "figures"
-    out.mkdir(parents=True, exist_ok=True)
-
+def draw_surface(ax) -> None:
+    """Draw the synthetic expiry/tenor slice of Black volatility."""
     surface = pd.read_csv(DATA / "ch14_synthetic_vol_surface.csv")
     pivot = surface.pivot(index="expiry", columns="tenor", values="vol")
-    strikes = np.linspace(0.025, 0.055, 15)
+    image = ax.imshow(pivot.to_numpy() * 100, cmap="Blues", aspect="auto")
+    ax.grid(False)
+    ax.set_xticks(np.arange(len(pivot.columns)), pivot.columns)
+    ax.set_yticks(np.arange(len(pivot.index)), pivot.index)
+    ax.set(xlabel="Underlying swap tenor (years)",
+           ylabel="Option expiry (years)")
+    for row in range(len(pivot.index)):
+        for col in range(len(pivot.columns)):
+            value = pivot.iloc[row, col] * 100
+            color = "white" if value > 24 else NAVY
+            ax.text(col, row, f"{value:.1f}", ha="center", va="center",
+                    color=color, fontsize=11)
+    bar = ax.figure.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
+    bar.set_label("Relative Black volatility (%)")
+
+
+def draw_strikes(ax) -> None:
+    """Draw an unscaled Black call, excluding notional and annuity."""
+    strikes = np.linspace(0.025, 0.055, 150)
     values = [black_call(0.041, strike, 0.24, 1.0) for strike in strikes]
+    ax.plot(strikes * 100, np.array(values) * 10000, color=ORANGE, lw=2)
+    ax.axvline(4.1, color=NAVY, ls="--", lw=1, label="Forward = 4.10%")
+    ax.set(xlabel="Strike (%)", ylabel="Black call (bp of rate)")
+    ax.legend(frameon=False, fontsize=10)
+    ax.spines[["top", "right"]].set_visible(False)
 
+
+def main() -> None:
+    """Create the composite and single-panel slide figures."""
+    out = ROOT / "figures"
+    out.mkdir(parents=True, exist_ok=True)
     plt.style.use("seaborn-v0_8-whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
-    image = axes[0].imshow(pivot.to_numpy() * 100, cmap="Blues",
-                           aspect="auto")
-    axes[0].set_title("Synthetic volatility surface", color=NAVY)
-    axes[0].set_xticks(np.arange(len(pivot.columns)))
-    axes[0].set_xticklabels(pivot.columns)
-    axes[0].set_yticks(np.arange(len(pivot.index)))
-    axes[0].set_yticklabels(pivot.index)
-    axes[0].set_xlabel("Tenor")
-    axes[0].set_ylabel("Expiry")
-    fig.colorbar(image, ax=axes[0], fraction=0.046, pad=0.04)
-
-    axes[1].plot(strikes * 100, np.array(values) * 10000, color=ORANGE)
-    axes[1].set_title("Option value by strike", color=NAVY)
-    axes[1].set_xlabel("Strike percent")
-    axes[1].set_ylabel("Value bp")
-
-    for ax in axes:
+    plt.rcParams.update({"font.size": 12})
+    draws = [draw_surface, draw_strikes]
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.4))
+    for ax, draw in zip(axes, draws):
+        draw(ax)
         ax.tick_params(colors=NAVY)
-        ax.xaxis.label.set_color(NAVY)
-        ax.yaxis.label.set_color(NAVY)
-        ax.spines[["top", "right"]].set_visible(False)
-
     fig.tight_layout()
     fig.savefig(out / "ch14_rates_option_surface.pdf")
     plt.close(fig)
+    for suffix, draw in zip(["volatility", "strike"], draws):
+        fig, ax = plt.subplots(figsize=(7.8, 2.7))
+        draw(ax)
+        ax.tick_params(colors=NAVY)
+        fig.tight_layout()
+        fig.savefig(out / f"ch14_option_{suffix}_slides.pdf")
+        plt.close(fig)
 
 
 if __name__ == "__main__":

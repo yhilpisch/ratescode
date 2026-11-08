@@ -44,3 +44,12 @@ to use relative paths into `data/` and `figures/`.
 `code/figures/` contains deterministic Matplotlib scripts that save figure
 PDFs into `figures/`. Run them through `make generated_figures` or the
 project validation workflow rather than by copying outputs manually.
+
+## Shared helpers
+
+- `code/credit_figure_layout.py` — shared layout helper used by the figure
+  scripts.
+- `code/genai_figure_checks.py` — reconciliation-check helpers imported by
+  the Part VIII figure scripts.
+- `common_math.py` — shared math helpers loaded from the repository root by
+  several chapter and figure scripts.

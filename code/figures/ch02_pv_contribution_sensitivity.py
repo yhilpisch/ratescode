@@ -48,27 +48,50 @@ def main() -> None:
         ("base rate", 0.04, BLUE),
         ("higher rate", 0.05, ORANGE),
     ]
-    width = 0.22  # grouped-bar width
-    offsets = np.array([-width, 0.0, width])  # bar offsets by scenario
-
     plt.style.use("seaborn-v0_8-whitegrid")
-    fig, ax = plt.subplots(figsize=(7.0, 3.8))
+    fig, (ax, ax_change) = plt.subplots(
+        2, 1, figsize=(7.0, 4.2), sharex=True,
+        gridspec_kw={"height_ratios": [2.0, 1.0]},
+    )
+    times, _, base_parts = pv_contributions(0.04)
+    spacing = float(np.diff(times).min())
+    width = min(0.09, spacing / 8)
+    offsets = width * np.array([-1.25, 0.0, 1.25])
+    handles = []
 
     for offset, (label, rate, color) in zip(offsets, scenarios):
         times, _, parts = pv_contributions(rate)
-        ax.bar(times + offset, parts, width=width, label=label, color=color)
+        bars = ax.bar(
+            times + offset, parts, width=width, label=label, color=color
+        )
+        handles.append(bars[0])
+        change_pct = (parts / base_parts - 1.0) * 100
+        ax_change.bar(times + offset, change_pct, width=width, color=color)
 
-    ax.set_title("Present-value contribution by payment date", color=NAVY)
-    ax.set_xlabel("Payment time in years")
-    ax.set_ylabel("Present-value contribution")
+    ax.set_title("Cash-flow value and relative rate-shock effect", color=NAVY)
+    ax.set_ylabel("PV contribution ($)")
+    ax_change.set_ylabel("Change vs base (%)")
+    ax_change.set_xlabel("Payment time in years")
     ax.set_xticks(times)
-    ax.legend(frameon=False, ncol=3, loc="upper left")
+    fig.legend(
+        handles,
+        [label for label, _, _ in scenarios],
+        frameon=False,
+        ncol=3,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.99),
+    )
+    ax_change.axhline(0.0, color=NAVY, lw=0.8)
     ax.spines[["top", "right"]].set_visible(False)
+    ax_change.spines[["top", "right"]].set_visible(False)
     ax.tick_params(colors=NAVY)
+    ax_change.tick_params(colors=NAVY)
     ax.xaxis.label.set_color(NAVY)
     ax.yaxis.label.set_color(NAVY)
+    ax_change.xaxis.label.set_color(NAVY)
+    ax_change.yaxis.label.set_color(NAVY)
 
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
     fig.savefig(out / "ch02_pv_contribution_sensitivity.pdf")
     plt.close(fig)
 

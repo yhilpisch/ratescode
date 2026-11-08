@@ -35,8 +35,10 @@ def profile_data() -> tuple[list[str], np.ndarray, np.ndarray]:
     bucket = pd.read_csv(DATA / "ch10_bond_portfolio.csv")
     names = profiles["portfolio"].tolist()
     weights = profiles[["short", "belly", "long"]].to_numpy(float)
-    bucket_dv01 = bucket["dv01"].to_numpy(float)
-    dv01 = weights @ bucket_dv01
+    durations = bucket["duration"].to_numpy(float)
+    total_value = float(bucket["market_value"].sum())
+    profile_duration = weights @ durations
+    dv01 = profile_duration * total_value * 0.0001
     return names, weights, dv01
 
 

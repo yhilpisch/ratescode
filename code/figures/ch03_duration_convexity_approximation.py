@@ -76,35 +76,68 @@ def main() -> None:
     )
 
     plt.style.use("seaborn-v0_8-whitegrid")
-    fig, ax = plt.subplots(figsize=(7.0, 3.8))
-    ax.plot(shifts * 10000, exact, color=NAVY, lw=2.2, label="exact price")
+    fig, (ax, ax_error) = plt.subplots(
+        2, 1, figsize=(7.0, 4.2), sharex=True,
+        gridspec_kw={"height_ratios": [2.0, 1.0]},
+    )
+    x = shifts * 10000
+    ax.plot(x, exact, color=NAVY, lw=2.6, label="exact price")
     ax.plot(
-        shifts * 10000,
+        x,
         duration_only,
         "--",
         color=ORANGE,
-        lw=1.8,
+        lw=2.0,
         label="duration only",
     )
     ax.plot(
-        shifts * 10000,
+        x,
         duration_convexity,
         ":",
         color=GREEN,
-        lw=2.2,
+        lw=2.6,
         label="duration plus convexity",
     )
 
-    ax.set_title("Duration and convexity as local approximations", color=NAVY)
-    ax.set_xlabel("Yield shift in basis points")
+    ax.set_title("Convexity materially reduces large-shock pricing error",
+                 color=NAVY)
     ax.set_ylabel("Bond price")
-    ax.legend(frameon=False)
+    duration_error = np.abs(duration_only - exact) * 100
+    convexity_error = np.abs(duration_convexity - exact) * 100
+    duration_error = np.where(duration_error > 1e-6, duration_error, np.nan)
+    convexity_error = np.where(
+        convexity_error > 1e-6, convexity_error, np.nan
+    )
+    ax_error.plot(
+        x, duration_error,
+        "--", color=ORANGE, lw=2.0, label="duration error",
+    )
+    ax_error.plot(
+        x, convexity_error,
+        ":", color=GREEN, lw=2.6, label="with convexity",
+    )
+    ax_error.set_xlabel("Yield shift (basis points)")
+    ax_error.set_ylabel("Absolute error (cents, log scale)")
+    ax_error.set_yscale("log")
+    ax_error.grid(True, which="both", axis="y")
+    fig.legend(
+        handles=[ax.lines[0], ax.lines[1], ax.lines[2]],
+        labels=["exact price", "duration only", "duration + convexity"],
+        frameon=False,
+        ncol=3,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.99),
+    )
     ax.spines[["top", "right"]].set_visible(False)
+    ax_error.spines[["top", "right"]].set_visible(False)
     ax.tick_params(colors=NAVY)
+    ax_error.tick_params(colors=NAVY)
     ax.xaxis.label.set_color(NAVY)
     ax.yaxis.label.set_color(NAVY)
+    ax_error.xaxis.label.set_color(NAVY)
+    ax_error.yaxis.label.set_color(NAVY)
 
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
     fig.savefig(out / "ch03_duration_convexity_approximation.pdf")
     plt.close(fig)
 

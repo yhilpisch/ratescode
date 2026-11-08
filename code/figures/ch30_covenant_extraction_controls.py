@@ -13,51 +13,57 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 
 os.environ.setdefault("SOURCE_DATE_EPOCH", "1767225600")
 
-import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
-
-NAVY = "#001F5B"
-BLUE = "#2F6DB5"
-ORANGE = "#D9822B"
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "code"))
+from credit_figure_layout import (
+    NAVY, BLUE, ORANGE, export_panels, legend_above,
+)
+
+from ch30_credit_documents_covenants_research_notes import covenant_headroom
+
+
+def draw_values(ax) -> None:
+    """Identify maximum/minimum direction beside each ratio comparison."""
+    table = covenant_headroom()
+    y = np.arange(len(table))
+    ax.hlines(y, table.extracted_value, table.threshold, color="#8CB6E8",
+               lw=4)
+    ax.scatter(table.extracted_value, y, color=BLUE, s=60, label="Observed")
+    ax.scatter(table.threshold, y, color=ORANGE, s=100, marker="|",
+               linewidths=2.5, label="Limit")
+    ax.set(yticks=y, yticklabels=["Atlas: max leverage", "Beacon: min coverage",
+                                 "Cedar: max leverage*"],
+           xlabel="Covenant ratio (times)", xlim=(1.3, 5.1), ylim=(-0.5, 2.5))
+    ax.invert_yaxis()
+    legend_above(ax)
+
+
+def draw_headroom(ax) -> None:
+    """Calculate margins; do not substitute the broader stored review policy."""
+    table = covenant_headroom()
+    bars = ax.bar(["Atlas", "Beacon", "Cedar*"], table.headroom,
+                  color=[ORANGE if h < 0.4 else BLUE for h in table.headroom])
+    ax.bar_label(bars, fmt="%.2f", padding=3, color=NAVY)
+    ax.axhline(0.4, color=NAVY, ls="--", label="Review below 0.40")
+    ax.set(ylabel="Headroom (ratio points)", ylim=(0, 0.72),
+           xlabel="*Cedar's covenant activation is not supplied")
+    legend_above(ax, columns=1)
 
 
 def main() -> None:
-    """Create the covenant extraction controls figure."""
-    out = ROOT / "figures"
-    out.mkdir(parents=True, exist_ok=True)
-    cov = pd.read_csv(DATA / "ch30_covenant_extractions.csv")
-    risk = pd.read_csv(DATA / "ch30_credit_risk_summary.csv")
-
-    plt.style.use("seaborn-v0_8-whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
-    axes[0].bar(cov["issuer"], cov["extracted_value"], color=BLUE)
-    axes[0].scatter(cov["issuer"], cov["threshold"], color=ORANGE,
-                    zorder=3, label="threshold")
-    axes[0].set_title("Extracted covenant values", color=NAVY)
-    axes[0].set_ylabel("Ratio (x)")
-    axes[0].tick_params(axis="x", rotation=25)
-    axes[0].legend(frameon=False, fontsize=8)
-
-    axes[1].bar(risk["issuer"], risk["headroom"], color=ORANGE)
-    axes[1].set_title("Covenant headroom", color=NAVY)
-    axes[1].set_ylabel("Headroom (x)")
-    axes[1].tick_params(axis="x", rotation=25)
-
-    for ax in axes:
-        ax.tick_params(colors=NAVY)
-        ax.xaxis.label.set_color(NAVY)
-        ax.yaxis.label.set_color(NAVY)
-        ax.spines[["top", "right"]].set_visible(False)
-
-    fig.tight_layout()
-    fig.savefig(out / "ch30_covenant_extraction_controls.pdf")
-    plt.close(fig)
+    """Export direction-labelled ratios and canonical computed headroom."""
+    export_panels("ch30_covenant_extraction_controls", [
+        ("values", "Metric-specific covenant direction", draw_values),
+        ("headroom", "Conditional numerical headroom", draw_headroom),
+    ])
 
 
 if __name__ == "__main__":

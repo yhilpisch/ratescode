@@ -13,95 +13,118 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 
 os.environ.setdefault("SOURCE_DATE_EPOCH", "1767225600")
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-
-NAVY = "#001F5B"
-BLUE = "#2F6DB5"
-ORANGE = "#D9822B"
-
-
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "code"))
+from credit_figure_layout import (
+    NAVY, BLUE, ORANGE, export_panels, legend_above,
+)
+
+from ch23_model_risk_calibration_risk_verification import (
+    calibration_residuals, finite_difference_dv01, price_from_yield,
+    yield_from_price,
+)
 
 
-def residual_data() -> pd.DataFrame:
-    """Return residuals for two curve calibration choices."""
-    quotes = pd.read_csv(DATA / "ch23_curve_quotes.csv")
-    quotes["linear"] = (quotes["model_linear"] - quotes["market_rate"])
-    quotes["smooth"] = (quotes["model_smooth"] - quotes["market_rate"])
-    quotes["linear_bp"] = quotes["linear"] * 10000.0
-    quotes["smooth_bp"] = quotes["smooth"] * 10000.0
-    return quotes
+def draw_residuals(ax) -> None:
+    """Plot supplied candidate residuals without implying a fitted solver."""
+    table = calibration_residuals()
+    for column, color, name in [
+        ("linear_residual_bp", BLUE, "Linear"),
+        ("smooth_residual_bp", ORANGE, "Smooth"),
+    ]:
+        rms = np.sqrt(np.mean(table[column] ** 2))
+        ax.plot(table.maturity, table[column], marker="o", color=color,
+                lw=2, label=f"{name}: RMS {rms:.2f} bp")
+    ax.axhline(0, color=NAVY, lw=1)
+    ax.set(xlabel="Quote maturity (years)", ylabel="Model - target (bp)")
+    legend_above(ax)
 
 
-def dv01_diagnostic() -> tuple[float, float]:
-    """Return finite-difference and approximation DV01 values."""
-    flows = pd.read_csv(DATA / "ch23_bond_roundtrip.csv")
-    times = flows["time"].to_numpy(float)
-    cashflows = flows["cashflow"].to_numpy(float)
-    ytm = 0.045  # base yield
-    discount = (1.0 + ytm / 2) ** (-2 * times)
-    price = float(np.dot(cashflows, discount))
-    bumped = (1.0 + (ytm + 0.0001) / 2) ** (-2 * times)
-    bumped_price = float(np.dot(cashflows, bumped))
-    fd_dv01 = price - bumped_price
-    weights = cashflows * discount / price  # value weights
-    duration = float(np.dot(times, weights)) / (1.0 + ytm / 2)
-    approx = price * duration / 10000.0
-    return fd_dv01, approx
+def bump_comparison() -> pd.DataFrame:
+    """Compare derivative approximations against the analytical local DV01."""
+    y, scale = 0.045, 1e-4
+    base = price_from_yield(y)
+    reference = finite_difference_dv01()["approx_dv01"]
+    rows = []
+    for bp in [0.1, 0.25, 0.5, 1, 2, 5, 10]:
+        h = bp * scale
+        plus = price_from_yield(y + h)
+        minus = price_from_yield(y - h)
+        up = (base - plus) / h * scale
+        central = (minus - plus) / (2 * h) * scale
+        rows.append({"bump_bp": bp, "one_sided": up, "centred": central,
+                     "analytical": reference})
+    return pd.DataFrame(rows)
+
+
+def draw_convergence(ax) -> None:
+    """Make small sensitivity differences visible as relative errors."""
+    table = bump_comparison()
+    for name, color, label in [("one_sided", BLUE, "One-sided"),
+                                ("centred", ORANGE, "Centred")]:
+        error = abs(table[name] - table.analytical) / table.analytical * 100
+        ax.loglog(table.bump_bp, error, marker="o", color=color, label=label)
+    ax.set(xlabel="Yield bump size (bp)", ylabel="Absolute relative error (%)")
+    legend_above(ax)
+
+
+def draw_values(ax) -> None:
+    """Retain the book's one-bp comparison with meaningful precision."""
+    result = finite_difference_dv01()
+    bars = ax.bar(["1 bp upward price loss", "Analytical local DV01"],
+                  [result["fd_dv01"], result["approx_dv01"]],
+                  color=[BLUE, ORANGE])
+    ax.bar_label(bars, fmt="%.9f", padding=3, color=NAVY)
+    ax.set(ylabel="Value per 100 principal", ylim=(0, 0.023))
+
+
+def draw_nonlinearity(ax) -> None:
+    """Compare a local linear loss with actual yield-bumped bond prices."""
+    base_yield = 0.045
+    base = price_from_yield(base_yield)
+    dv01 = finite_difference_dv01()["approx_dv01"]
+    shocks = np.array([-200, -100, -50, -25, 0, 25, 50, 100, 200])
+    actual = np.array([base - price_from_yield(base_yield + bp * 1e-4)
+                       for bp in shocks])
+    gap = dv01 * shocks - actual
+    ax.plot(shocks, gap, marker="o", color=ORANGE, lw=2)
+    ax.axhline(0, color=NAVY, lw=0.7)
+    ax.set(xlabel="Nominal semiannual-compounded yield shock (bp)",
+           ylabel="Loss gap (per 100 face)")
+
+
+def draw_inversion(ax) -> None:
+    """Show the configured yield bracket and a target-price crossing."""
+    yields = np.linspace(0, 0.20, 100)
+    prices = [price_from_yield(y) for y in yields]
+    recovered = yield_from_price(100)
+    ax.plot(yields * 100, prices, color=BLUE, lw=2, label="Bond dirty price")
+    ax.axhline(100, color=NAVY, ls="--", label="Target = 100")
+    ax.axvline(recovered * 100, color=ORANGE, ls=":", lw=1.7)
+    ax.scatter([recovered * 100], [100], color=ORANGE, s=45, zorder=4)
+    ax.set(xlabel="Nominal annual yield, semiannual compounding (%)",
+           ylabel="Dirty price per 100 face", xlim=(0, 20))
+    legend_above(ax)
 
 
 def main() -> None:
-    """Create the calibration and verification diagnostics figure."""
-    out = ROOT / "figures"
-    out.mkdir(parents=True, exist_ok=True)
-
-    residuals = residual_data()
-    fd_dv01, approx_dv01 = dv01_diagnostic()
-
-    plt.style.use("seaborn-v0_8-whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
-
-    axes[0].plot(
-        residuals["maturity"],
-        residuals["linear_bp"],
-        marker="o",
-        color=BLUE,
-        label="linear",
-    )
-    axes[0].plot(
-        residuals["maturity"],
-        residuals["smooth_bp"],
-        marker="s",
-        color=ORANGE,
-        label="smooth",
-    )
-    axes[0].axhline(0, color=NAVY, lw=1)
-    axes[0].set_title("Calibration residuals", color=NAVY)
-    axes[0].set_xlabel("Maturity")
-    axes[0].set_ylabel("Residual bp")
-    axes[0].legend(frameon=False, fontsize=8)
-
-    axes[1].bar(["finite diff", "duration"], [fd_dv01, approx_dv01],
-                color=[BLUE, ORANGE])
-    axes[1].set_title("DV01 verification", color=NAVY)
-    axes[1].set_ylabel("DV01")
-
-    for ax in axes:
-        ax.tick_params(colors=NAVY)
-        ax.xaxis.label.set_color(NAVY)
-        ax.yaxis.label.set_color(NAVY)
-        ax.spines[["top", "right"]].set_visible(False)
-
-    fig.tight_layout()
-    fig.savefig(out / "ch23_calibration_verification_diagnostics.pdf")
-    plt.close(fig)
+    """Export supplied fit diagnostics and analytical/bump comparisons."""
+    export_panels("ch23_calibration_verification_diagnostics", [
+        ("residuals", "Supplied quote residuals", draw_residuals),
+        ("convergence", "Finite-difference convergence", draw_convergence),
+        ("nonlinear", "Linear versus repriced loss", draw_nonlinearity),
+        ("inversion", "Price/yield inversion", draw_inversion),
+    ], book_panels=[
+        ("residuals", "Quote residual comparison", draw_residuals),
+        ("values", "One-bp sensitivity comparison", draw_values),
+    ])
 
 
 if __name__ == "__main__":

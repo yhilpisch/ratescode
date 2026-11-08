@@ -13,61 +13,77 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 
 os.environ.setdefault("SOURCE_DATE_EPOCH", "1767225600")
 
-import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
 
-
-NAVY = "#001F5B"
-BLUE = "#2F6DB5"
-ORANGE = "#D9822B"
 ROOT = Path(__file__).resolve().parents[2]
-DATA = ROOT / "data"
+sys.path.insert(0, str(ROOT / "code"))
+from credit_figure_layout import (
+    NAVY, BLUE, ORANGE, export_panels, legend_above,
+)
+
+from ch20_private_credit_analytics import (
+    loan_book, borrower_stress, stress_table,
+)
+
+
+def draw_headroom(ax, field: str, label: str) -> None:
+    """Compare base and severe headroom against individual covenants."""
+    details = borrower_stress()
+    names = loan_book().borrower.tolist()
+    y = np.arange(len(names))
+    for scenario, shift, color in [("base", -0.18, BLUE),
+                                    ("severe stress", 0.18, ORANGE)]:
+        table = details.loc[details.scenario == scenario].set_index("borrower")
+        values = table.loc[names, field]
+        bars = ax.barh(y + shift, values, height=0.32, color=color,
+                       label="Base" if scenario == "base" else "Severe stress")
+        ax.bar_label(bars, fmt="%.3f", padding=3, fontsize=10, color=NAVY)
+    ax.set_yticks(y, [name.split()[0] for name in names])
+    ax.axvline(0, color=NAVY, lw=1)
+    ax.invert_yaxis()
+    ax.margins(x=0.25)
+    ax.set_xlabel(label)
+    legend_above(ax)
+
+
+def draw_leverage(ax) -> None:
+    """Draw leverage headroom, retaining the base Cobalt breach."""
+    draw_headroom(ax, "leverage_headroom", "Leverage headroom (turns)")
+
+
+def draw_coverage(ax) -> None:
+    """Use borrower-specific coverage limits rather than a common cutoff."""
+    draw_headroom(ax, "coverage_headroom", "Coverage headroom (turns)")
+
+
+def draw_book_leverage(ax) -> None:
+    """Retain the book's base leverage view with explicit ratio units."""
+    book = loan_book()
+    ax.barh([name.split()[0] for name in book.borrower],
+            book.debt / book.ebitda, color=BLUE)
+    ax.set_xlabel("Debt/annual EBITDA (turns)")
+
+
+def draw_book_minimum(ax) -> None:
+    """Retain canonical minima without treating them as covenant tests."""
+    table = stress_table()
+    ax.barh(table.scenario, table.min_coverage, color=ORANGE)
+    ax.set_xlabel("Minimum borrower coverage (turns)")
 
 
 def main() -> None:
-    """Create the private credit stress dashboard figure."""
-    out = ROOT / "figures"
-    out.mkdir(parents=True, exist_ok=True)
-
-    loans = pd.read_csv(DATA / "ch20_private_credit_loans.csv")
-    covenants = pd.read_csv(DATA / "ch20_borrower_metrics.csv")
-    book = loans.merge(covenants, on="borrower")
-    book["leverage"] = book["debt"] / book["ebitda"]
-    book["coverage"] = book["ebitda"] / book["interest"]
-    stress = pd.read_csv(DATA / "ch20_private_credit_stress_scenarios.csv")
-    values = []
-    for scenario in stress.itertuples():
-        ebitda = book["ebitda"] * (1.0 + scenario.ebitda_shock)
-        interest = (
-            book["interest"] + book["principal"] * scenario.base_rate_shock
-        )
-        coverage = ebitda / interest
-        values.append(float(coverage.min()))
-
-    plt.style.use("seaborn-v0_8-whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.8))
-    axes[0].bar(book["borrower"], book["leverage"], color=BLUE)
-    axes[0].set_title("Borrower leverage", color=NAVY)
-    axes[0].set_ylabel("Debt/EBITDA")
-    axes[0].tick_params(axis="x", rotation=25)
-
-    axes[1].bar(stress["scenario"], values, color=ORANGE)
-    axes[1].set_title("Minimum stress coverage", color=NAVY)
-    axes[1].set_ylabel("Coverage")
-    axes[1].tick_params(axis="x", rotation=25)
-
-    for ax in axes:
-        ax.tick_params(colors=NAVY)
-        ax.xaxis.label.set_color(NAVY)
-        ax.yaxis.label.set_color(NAVY)
-        ax.spines[["top", "right"]].set_visible(False)
-
-    fig.tight_layout()
-    fig.savefig(out / "ch20_private_credit_stress_dashboard.pdf")
-    plt.close(fig)
+    """Keep the book view and add complete borrower headroom slide panels."""
+    export_panels("ch20_private_credit_stress_dashboard", [
+        ("leverage", "Leverage headroom", draw_leverage),
+        ("coverage", "Coverage headroom", draw_coverage),
+    ], book_panels=[
+        ("base", "Base borrower leverage", draw_book_leverage),
+        ("minimum", "Minimum coverage by scenario", draw_book_minimum),
+    ])
 
 
 if __name__ == "__main__":

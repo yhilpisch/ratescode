@@ -86,7 +86,6 @@ def borrower_stress() -> pd.DataFrame:
     detail["leverage_breach"] = detail["leverage_headroom"] < 0
     detail["coverage_breach"] = detail["coverage_headroom"] < 0
     return detail
-    return pd.DataFrame(rows)
 
 
 def covenant_snippets() -> pd.DataFrame:

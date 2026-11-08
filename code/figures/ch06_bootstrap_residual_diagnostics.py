@@ -60,6 +60,14 @@ def main() -> None:
     )
     residuals_bp = (fitted - quotes) * 10000.0  # residuals in basis points
     residuals_bp[np.abs(residuals_bp) < 1e-10] = 0.0  # remove round-off noise
+    rounded_discounts = np.round(discounts, 4)
+    rounded_fitted = np.array(
+        [
+            par_swap_rate(rounded_discounts, n)
+            for n in range(1, len(rounded_discounts) + 1)
+        ]
+    )
+    rounded_residuals_bp = (rounded_fitted - quotes) * 10000.0
 
     plt.style.use("seaborn-v0_8-whitegrid")
     fig, axes = plt.subplots(1, 2, figsize=(8.0, 3.6))
@@ -69,12 +77,28 @@ def main() -> None:
     axes[0].set_xlabel("Maturity in years")
     axes[0].set_ylabel("Discount factor")
 
-    axes[1].bar(maturities, residuals_bp, color=ORANGE, width=0.35)
+    width = 0.28
+    axes[1].axhspan(-0.01, 0.01, color=BLUE, alpha=0.12, label="±0.01 bp")
+    axes[1].bar(
+        maturities - width / 2,
+        residuals_bp,
+        color=NAVY,
+        width=width,
+        label="full precision",
+    )
+    axes[1].bar(
+        maturities + width / 2,
+        rounded_residuals_bp,
+        color=ORANGE,
+        width=width,
+        label="nodes rounded to 4 dp",
+    )
     axes[1].axhline(0.0, color=NAVY, lw=1.0)
     axes[1].set_title("Quote repricing residuals", color=NAVY)
     axes[1].set_xlabel("Maturity in years")
     axes[1].set_ylabel("Residual in basis points")
-    axes[1].set_ylim(-0.02, 0.02)
+    axes[1].set_ylim(-0.6, 0.2)
+    axes[1].legend(frameon=False, fontsize=8)
 
     for ax in axes:
         ax.spines[["top", "right"]].set_visible(False)
